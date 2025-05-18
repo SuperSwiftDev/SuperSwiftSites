@@ -9,6 +9,7 @@ pub mod cli;
 pub mod compile;
 pub mod process;
 pub mod template;
+pub mod manifest;
 
 fn main() {
     cli::Cli::parse().execute();

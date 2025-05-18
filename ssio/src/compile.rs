@@ -17,8 +17,14 @@ impl Compiler {
         std::fs::create_dir_all(&self.output_dir).unwrap();
         let template = self.template_path
             .as_ref()
-            .map(|x| {
-                process_html_file(x, crate::html::ParserMode::Document).unwrap()
+            .map(|path| {
+                match process_html_file(path, crate::html::ParserMode::Document) {
+                    Ok(x) => x,
+                    Err(error) => {
+                        eprintln!("Failed to read file: {path:?}");
+                        panic!("{error}")
+                    }
+                }
             })
             .inspect(|out| {
                 // out.value.print_pretty_tree();

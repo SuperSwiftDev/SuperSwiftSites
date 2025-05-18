@@ -1,4 +1,4 @@
 [workspace]
-members = ["super-swift-compiler"]
+members = [ "ssio" ]
 
 resolver = "3"  # Use resolver version 3 (recommended for edition 2021/2024)

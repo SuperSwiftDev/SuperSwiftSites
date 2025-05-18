@@ -10,6 +10,7 @@ pub mod compile;
 pub mod process;
 pub mod template;
 pub mod manifest;
+pub mod symlink;
 
 fn main() {
     cli::Cli::parse().execute();

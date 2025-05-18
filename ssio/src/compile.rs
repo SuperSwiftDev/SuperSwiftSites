@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, path::PathBuf};
 
 // use pretty_tree::PrettyTreePrinter;
 
-use crate::{html::ParserMode, process::{process_html_file, NavLinkRoute, OutputContext}};
+use crate::{html::ParserMode, process::{process_html_file, Dependency, NavLinkRoute, OutputContext}};
 
 #[derive(Debug, Clone)]
 pub struct Compiler {
@@ -48,6 +48,11 @@ impl Compiler {
             .iter()
             .map(|(_, x)| x.context.clone())
             .fold(OutputContext::default(), |acc, x| { acc.merge(x) });
+        let dependencies = env.dependencies
+            .clone()
+            .into_iter()
+            .filter(|x| !x.internal)
+            .collect::<Vec<_>>();
         let routes = env.routes
             .clone()
             .into_iter()
@@ -93,6 +98,15 @@ impl Compiler {
                 std::fs::write(&out_path, page_str).unwrap();
             }
         }
+        for dependency in dependencies {
+            let full_resolved_path = dependency.resolved_source_file_path();
+            let target_path = dependency.resolved_target_file_path(&self.output_dir);
+            println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
+            crate::symlink::create_relative_symlink(
+                &full_resolved_path,
+                &target_path
+            ).unwrap();
+        }
     }
 }
 
@@ -119,5 +133,17 @@ impl NavLinkRoute {
     }
     fn matches(&self, target_path: impl AsRef<std::path::Path>) -> bool {
         target_path.as_ref() == self.full_file_path().as_path()
+    }
+}
+
+impl Dependency {
+    fn resolved_source_file_path(&self) -> PathBuf {
+        let base = self.origin.parent().unwrap();
+        let full = base.join(&self.target);
+        let full = path_clean::clean(&full);
+        full
+    }
+    fn resolved_target_file_path(&self, output_dir: impl AsRef<std::path::Path>) -> PathBuf {
+        output_dir.as_ref().join(&self.target)
     }
 }

@@ -128,6 +128,7 @@ impl Element {
                 TagType::Img => process_img_tag(self.attrs, self.children, input),
                 TagType::NavLink => process_nav_link_tag(self.attrs, self.children, input),
                 TagType::Include => process_include_tag(self.attrs, self.children, input),
+                TagType::Link => process_link_tag(self.attrs, self.children, input),
             }
         }
         process_fragment(self.children, input).map(|children| {
@@ -156,6 +157,7 @@ enum TagType {
     Img,
     NavLink,
     Include,
+    Link,
 }
 
 impl TagType {
@@ -164,6 +166,7 @@ impl TagType {
             "img" => Some(Self::Img),
             "nav-link" => Some(Self::NavLink),
             "include" => Some(Self::Include),
+            "link" => Some(Self::Link),
             _ => None,
         }
     }
@@ -181,6 +184,32 @@ fn process_img_tag(
             ctx.dependencies.insert(Dependency { origin: source, target, internal: false });
         }
         Html::Element(Element { tag: String::from("img"), attrs: attrs, children: children })
+    })
+}
+
+fn process_link_tag(
+    attrs: HashMap<String, String>,
+    children: Vec<Html>,
+    input: &InputContext,
+) -> IO<Html> {
+    process_fragment(children, input).map_with(|children, ctx| {
+        let mut src_path: Option<String> = None;
+        if let Some(rel_value) = attrs.get("rel") {
+            if rel_value == "stylesheet" {
+                if let Some(href_value) = attrs.get("href") {
+                    if is_local_href(&href_value) {
+                        src_path = Some(href_value.clone());
+                    }
+                }
+            }
+        }
+        if let Some(src_value) = src_path {
+            let source = input.source_path.clone();
+            let target = PathBuf::from(src_value);
+            let new_dependency = Dependency { origin: source, target, internal: false };
+            ctx.dependencies.insert(new_dependency);
+        }
+        Html::Element(Element { tag: String::from("link"), attrs: attrs, children: children })
     })
 }
 
@@ -235,3 +264,16 @@ fn process_include_tag(
         Html::Fragment(children)
     })
 }
+
+/// Determine if an href points to a local file.
+fn is_local_href(href: &str) -> bool {
+    // Trim whitespace and decode HTML entities like &amp;
+    let decoded = html_escape::decode_html_entities(href.trim());
+
+    // Reject URLs that are clearly external
+    let lowered = decoded.to_ascii_lowercase();
+    !(lowered.starts_with("http://")
+        || lowered.starts_with("https://")
+        || lowered.starts_with("//"))
+}
+

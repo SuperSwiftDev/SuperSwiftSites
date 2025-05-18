@@ -26,7 +26,9 @@ sample
 
 # Overview
 
-The biggest innovation so far is better reusability.
+The biggest innovation so far is better reusability. What my project does well is better functionality regarding relative paths, where relative paths are resolved when expanding out file templates / includes, recursively.
+
+## Including files, recursively
 
 Consider the following files,
 

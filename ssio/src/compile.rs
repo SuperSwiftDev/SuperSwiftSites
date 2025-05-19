@@ -48,7 +48,7 @@ impl Compiler {
             .iter()
             .map(|(_, x)| x.context.clone())
             .fold(OutputContext::default(), |acc, x| { acc.merge(x) });
-        println!("{env:#?}");
+        // println!("{env:#?}");
         let dependencies = env.dependencies
             .clone()
             .into_iter()

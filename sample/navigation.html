@@ -1,10 +1,18 @@
 <nav>
     <nav-link from="pages/index.html" as="index.html">
-        <img src="logo.png" alt="Your Company Name">
+        <img src="logo.png" alt="Your Company Name" class="logo">
     </nav-link>
     <ol>
         <li><nav-link from="pages/page1.html" as="page1.html">Page 1</nav-link></li>
         <li><nav-link from="pages/page2.html" as="page2.html">Page 2</nav-link></li>
         <li><nav-link from="pages/page3.html" as="page3.html">Page 3</nav-link></li>
+        <li>
+            <nav-link from="pages/subgroup.html" as="subgroup.html">Subgroup</nav-link>
+            <ol>
+                <li><nav-link from="pages/subgroup/subpage-1.html" as="subgroup/subpage-1.html">Subpage 1</nav-link></li>
+                <li><nav-link from="pages/subgroup/subpage-2.html" as="subgroup/subpage-2.html">Subpage 2</nav-link></li>
+                <li><nav-link from="pages/subgroup/subpage-3.html" as="subgroup/subpage-3.html">Subpage 3</nav-link></li>
+            </ol>
+        </li>
     </ol>
 </nav>

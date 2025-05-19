@@ -48,6 +48,7 @@ impl Compiler {
             .iter()
             .map(|(_, x)| x.context.clone())
             .fold(OutputContext::default(), |acc, x| { acc.merge(x) });
+        println!("{env:#?}");
         let dependencies = env.dependencies
             .clone()
             .into_iter()
@@ -75,15 +76,16 @@ impl Compiler {
                 let output_target = self.output_dir.join(&route.external);
                 (route, page, output_target)
             })
-            .filter(|(route, contents, output_target)| {
-                let keep = !compiled_pages.contains(output_target);
-                if keep {
-                    compiled_pages.insert(output_target.clone());
-                }
-                keep
-            })
+            // .filter(|(route, contents, output_target)| {
+            //     let keep = !compiled_pages.contains(output_target);
+            //     if keep {
+            //         compiled_pages.insert(output_target.clone());
+            //     }
+            //     keep
+            // })
             .collect::<Vec<_>>();
         for (route, page, out_path) in route_pages {
+            // println!("{route:?}: {:?} => {out_path:?}", route.full_file_path());
             let page_str = if self.pretty_print {
                 page.value.pretty_html_string()
             } else {
@@ -99,13 +101,16 @@ impl Compiler {
                 })
                 .unwrap_or(true);
             if should_write {
+                if let Some(parent) = out_path.parent() {
+                    std::fs::create_dir_all(parent).unwrap();
+                }
                 std::fs::write(&out_path, page_str).unwrap();
             }
         }
         for dependency in dependencies {
             let full_resolved_path = dependency.resolved_source_file_path();
             let target_path = dependency.resolved_target_file_path(&self.output_dir);
-            println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
+            // println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
             crate::symlink::create_relative_symlink(
                 &full_resolved_path,
                 &target_path

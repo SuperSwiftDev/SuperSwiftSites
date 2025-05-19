@@ -31,6 +31,7 @@ pub struct Element {
 enum NodeKind {
     Element(Element),
     Text(String),
+    Comment(String),
     Fragment,
 }
 
@@ -99,6 +100,7 @@ impl FragmentSink {
                 el.children = node.children.iter().map(|&id| self.to_html(id)).collect();
                 Html::Element(el)
             }
+            NodeKind::Comment(_) => Html::Fragment(vec![]), // ← skip it safely
         }
     }
 }
@@ -172,7 +174,15 @@ impl TreeSink for FragmentSink {
     }
 
     fn create_comment(&mut self, _text: Tendril<UTF8>) -> Self::Handle {
-        self.root_id
+        // Safe dummy node — never rendered
+        let node = Node {
+            kind: NodeKind::Comment(String::new()),
+            children: vec![],
+            parent: None,
+        };
+
+        self.nodes.push(node);
+        self.nodes.len() - 1
     }
 
     fn create_pi(&mut self, _target: Tendril<UTF8>, _data: Tendril<UTF8>) -> Self::Handle {

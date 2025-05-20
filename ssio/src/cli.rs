@@ -14,6 +14,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Command {
     Compile(CompileCli),
+    Build(BuildCli),
 }
 
 #[derive(Parser, Debug)]
@@ -27,26 +28,47 @@ pub struct CompileCli {
     #[arg(long, num_args = 1..)]
     input: Vec<String>,
     /// The output directory.
-    #[arg(long, num_args = 1..)]
+    #[arg(long)]
     output: PathBuf,
+    /// The project root.
+    #[arg(long)]
+    root: PathBuf,
     /// Pretty-print HTML(5) files (more pretty); default value is true.
     #[arg(long)]
     pretty_print: Option<bool>,
+}
+
+#[derive(Parser, Debug)]
+pub struct BuildCli {
+    #[arg(long)]
+    pub manifest: PathBuf
 }
 
 impl Cli {
     pub fn execute(self) {
         match self.command {
             Command::Compile(compile_cli) => compile_cli.execute(),
+            Command::Build(build_cli) => build_cli.execute(),
         }
     }
 }
 
 impl CompileCli {
     pub fn execute(self) {
+        let input_paths = crate::path_utils::resolve_file_path_paterns(&self.input)
+            .unwrap()
+            .into_iter()
+            .map(|path| {
+                crate::compile::InputRule {
+                    source: path,
+                    target: None,
+                }
+            })
+            .collect();
         let compiler = Compiler {
+            project_root: self.root.clone(),
+            input_paths,
             template_path: self.template.clone(),
-            input_paths: resolve_file_path_paterns(&self.input).unwrap(),
             output_dir: self.output.clone(),
             pretty_print: self.pretty_print.unwrap_or(true),
         };
@@ -54,37 +76,11 @@ impl CompileCli {
     }
 }
 
-fn resolve_file_path_paterns(patterns: &[String]) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-    fn resolve_entry_as_glob(pattern: &str) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-        let mut results = Vec::<PathBuf>::new();
-        for pattern in glob::glob(pattern)? {
-            match pattern {
-                Ok(path) => {
-                    results.push(path);
-                    continue;
-                }
-                Err(error) => return Err(Box::new(error)),
-            }
-        }
-        Ok(results)
+impl BuildCli {
+    pub fn execute(self) {
+        let manifest_dir = self.manifest.parent().unwrap();
+        let manifest = crate::manifest::load_project_manifest(&self.manifest).unwrap();
+        manifest.execute(manifest_dir);
     }
-    fn resolve_entry(pattern: &str) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-        if let Ok(results) = resolve_entry_as_glob(pattern) {
-            return Ok(results)
-        }
-        let path = PathBuf::from(pattern);
-        return Ok(vec![path])
-    }
-    let mut results = Vec::<PathBuf>::new();
-    for pattern in patterns {
-        match resolve_entry(&pattern) {
-            Ok(paths) => {
-                results.extend(paths);
-            }
-            Err(error) => {
-                return Err(error)
-            }
-        }
-    }
-    Ok(results)
 }
+

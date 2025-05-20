@@ -1,3 +1,3 @@
 set -e
 
-cargo run --bin ssio -- $@
+cargo run --bin ssio -- "$@"

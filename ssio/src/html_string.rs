@@ -104,7 +104,7 @@ impl Element {
         let attributes = format_attributes(&self.attrs);
         if crate::html::is_void_tag(&self.tag) && self.children.len() == 0 {
             format!(
-                "<{tag}{attributes} />",
+                "<{tag} {attributes} />",
                 tag=self.tag,
             )
         } else {
@@ -113,7 +113,7 @@ impl Element {
                 children
             };
             format!(
-                "<{tag}{attributes}>{contents}</{tag}>",
+                "<{tag} {attributes}>{contents}</{tag}>",
                 tag=self.tag,
             )
         }
@@ -125,11 +125,7 @@ fn format_fragment(nodes: &[Html], environment: &Environment) -> String {
         .iter()
         .map(|child| {
             let environment = environment.clone();
-            match child {
-                Html::Text(txt) => txt.to_string(),
-                Html::Element(element) => element.html_string(&environment),
-                Html::Fragment(nodes) => format_fragment(&nodes, &environment),
-            }
+            child.html_string(&environment)
         })
         .collect::<Vec<_>>();
     if xs.is_empty() {
@@ -142,11 +138,12 @@ fn format_fragment(nodes: &[Html], environment: &Environment) -> String {
 fn format_attributes(attributes: &HashMap<String, String>) -> String {
     let mut attributes = attributes
         .iter()
-        .map(|(key, mut value)| {
-            if value.is_empty() {
-                return format!("{}", key);
-            }
-            format!("{}=\"{}\"", key, value)
+        .map(|(key, value)| {
+            // println!("{key:?}: {value:?}");
+            // if value.is_empty() {
+            //     return format!("{}", key);
+            // }
+            format!("{key}={value:?}")
         })
         .collect::<Vec<_>>();
     if attributes.is_empty() {

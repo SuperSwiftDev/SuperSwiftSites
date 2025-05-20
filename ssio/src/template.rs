@@ -1,6 +1,14 @@
 use crate::{html::{Element, Html}, process::{OutputContext, IO}};
 
-pub fn bake_template_content(template: IO<Html>, content: IO<Html>, is_implicit: bool) -> IO<Html> {
+pub fn bake_template_content(
+    template: IO<Html>,
+    content: IO<Html>,
+    is_implicit: bool
+) -> IO<Html> {
+    process_template(template, content, is_implicit)
+}
+
+fn process_template(template: IO<Html>, content: IO<Html>, is_implicit: bool) -> IO<Html> {
     let mut is_baked: bool = false;
     let IO { context, value } = template;
     let result = value.bake_template_content(&context, &content, &mut is_baked);

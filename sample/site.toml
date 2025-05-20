@@ -1,0 +1,8 @@
+root = "."
+output_dir = "output"
+template = "base.html"
+
+[[globs]]
+pattern = "pages/**/*.html"
+strip_prefix = "pages/"
+

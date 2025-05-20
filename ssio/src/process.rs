@@ -1,5 +1,7 @@
 use std::{collections::{HashMap, HashSet}, path::PathBuf};
 
+use pretty_tree::PrettyTreePrinter;
+
 use crate::html::{Element, Html, ParserMode};
 
 // #[derive(Debug, Clone)]
@@ -7,6 +9,7 @@ use crate::html::{Element, Html, ParserMode};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct InputContext {
+    pub project_root: PathBuf,
     pub source_path: PathBuf,
 }
 
@@ -19,7 +22,7 @@ impl InputContext {
 #[derive(Debug, Clone, Default)]
 pub struct OutputContext {
     pub dependencies: HashSet<Dependency>,
-    pub routes: HashSet<NavLinkRoute>,
+    pub site_link: HashSet<SiteLink>,
 }
 
 impl OutputContext {
@@ -39,7 +42,7 @@ impl OutputContext {
     pub fn union(left: Self, right: Self) -> Self {
         OutputContext {
             dependencies: left.dependencies.union(&right.dependencies).cloned().collect(),
-            routes: left.routes.union(&right.routes).cloned().collect(),
+            site_link: left.site_link.union(&right.site_link).cloned().collect(),
         }
     }
     pub fn merge(self, other: Self) -> Self {
@@ -47,7 +50,7 @@ impl OutputContext {
     }
     pub fn include(&mut self, other: Self) {
         self.dependencies.extend(other.dependencies);
-        self.routes.extend(other.routes);
+        self.site_link.extend(other.site_link);
     }
 }
 
@@ -88,18 +91,22 @@ impl<Value> Default for IO<Vec<Value>> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct NavLinkRoute {
+pub struct SiteLink {
     pub origin: PathBuf,
-    pub internal: PathBuf,
-    pub external: String,
+    pub target: PathBuf,
 }
 
-pub fn process_html_file(file_path: impl AsRef<std::path::Path>, parser_mode: ParserMode) -> Result<IO<Html>, Box<dyn std::error::Error>> {
+pub fn process_html_file(
+    file_path: impl AsRef<std::path::Path>,
+    parser_mode: ParserMode,
+    project_root: impl AsRef<std::path::Path>,
+) -> Result<IO<Html>, Box<dyn std::error::Error>> {
     let file_path = file_path.as_ref().to_path_buf();
     let source = std::fs::read_to_string(&file_path)?;
     let source_tree = Html::parse(&source, parser_mode);
     let input_ctx = InputContext {
         source_path: file_path,
+        project_root: project_root.as_ref().to_path_buf(),
     };
     Ok(process_html_tree(source_tree, &input_ctx))
 }
@@ -125,8 +132,8 @@ impl Element {
     fn process(self, input: &InputContext) -> IO<Html> {
         if let Some(tag_type) = TagType::from(&self.tag) {
             return match tag_type {
+                TagType::A => process_a_tag(self.attrs, self.children, input),
                 TagType::Img => process_img_tag(self.attrs, self.children, input),
-                TagType::NavLink => process_nav_link_tag(self.attrs, self.children, input),
                 TagType::Include => process_include_tag(self.attrs, self.children, input),
                 TagType::Link => process_link_tag(self.attrs, self.children, input),
             }
@@ -154,8 +161,8 @@ fn process_fragment(nodes: Vec<Html>, input: &InputContext) -> IO<Vec<Html>> {
 }
 
 enum TagType {
+    A,
     Img,
-    NavLink,
     Include,
     Link,
 }
@@ -163,8 +170,8 @@ enum TagType {
 impl TagType {
     fn from(tag: &str) -> Option<Self> {
         match tag {
+            "a" => Some(Self::A),
             "img" => Some(Self::Img),
-            "nav-link" => Some(Self::NavLink),
             "include" => Some(Self::Include),
             "link" => Some(Self::Link),
             _ => None,
@@ -173,7 +180,7 @@ impl TagType {
 }
 
 fn process_img_tag(
-    attrs: HashMap<String, String>,
+    mut attrs: HashMap<String, String>,
     children: Vec<Html>,
     input: &InputContext,
 ) -> IO<Html> {
@@ -182,13 +189,20 @@ fn process_img_tag(
             let source = input.source_path.clone();
             let target = PathBuf::from(src_value);
             ctx.dependencies.insert(Dependency { origin: source, target, internal: false });
+            // - -
+            let virtual_src = crate::path_utils::normalize_virtual_path(
+                &src_value,
+                &input.source_path,
+                &input.project_root,
+            );
+            attrs.insert(String::from("src"), virtual_src);
         }
         Html::Element(Element { tag: String::from("img"), attrs: attrs, children: children })
     })
 }
 
 fn process_link_tag(
-    attrs: HashMap<String, String>,
+    mut attrs: HashMap<String, String>,
     children: Vec<Html>,
     input: &InputContext,
 ) -> IO<Html> {
@@ -197,45 +211,51 @@ fn process_link_tag(
         if let Some(rel_value) = attrs.get("rel") {
             if rel_value == "stylesheet" {
                 if let Some(href_value) = attrs.get("href") {
-                    if is_local_href(&href_value) {
+                    if !crate::path_utils::is_external_url(&href_value) {
                         src_path = Some(href_value.clone());
                     }
                 }
             }
         }
-        if let Some(src_value) = src_path {
-            let source = input.source_path.clone();
-            let target = PathBuf::from(src_value);
-            let new_dependency = Dependency { origin: source, target, internal: false };
+        if let Some(href_value) = src_path {
+            let origin = input.source_path.clone();
+            let target = PathBuf::from(href_value.clone());
+            let new_dependency = Dependency { origin, target, internal: false };
             ctx.dependencies.insert(new_dependency);
+            // - -
+            let virtual_href = crate::path_utils::normalize_virtual_path(
+                &href_value,
+                &input.source_path,
+                &input.project_root,
+            );
+            attrs.insert(String::from("href"), virtual_href);
         }
         Html::Element(Element { tag: String::from("link"), attrs: attrs, children: children })
     })
 }
 
-fn process_nav_link_tag(
+fn process_a_tag(
     mut attrs: HashMap<String, String>,
     children: Vec<Html>,
     input: &InputContext,
 ) -> IO<Html> {
     process_fragment(children, input).map_with(|children, ctx| {
-        let mut rewrite: Option<(PathBuf, String)> = None;
-        if let Some(from_value) = attrs.get("from") {
-            let from_path = PathBuf::from(from_value);
-            if let Some(as_value) = attrs.get("as") {
-                rewrite = Some((from_path, as_value.to_owned()));
-                let _ = attrs.remove("from");
-                let _ = attrs.remove("as");
-            }
-        }
-        if let Some((from, to)) = rewrite {
-            attrs.insert(String::from("href"), to.clone());
-            let route = NavLinkRoute {
-                origin: input.source_path.clone(),
-                internal: from,
-                external: to,
+        if let Some(from_value) = attrs.get("href") {
+            let from_path = PathBuf::from(from_value.clone());
+            let origin = path_clean::clean(&input.source_path);
+            let target = path_clean::clean(&from_path);
+            let site_link = SiteLink {
+                origin,
+                target,
             };
-            ctx.routes.insert(route);
+            ctx.site_link.insert(site_link);
+            // - -
+            let virtual_href = crate::path_utils::normalize_virtual_path(
+                &from_value,
+                &input.source_path,
+                &input.project_root,
+            );
+            attrs.insert(String::from("href"), virtual_href);
         }
         Html::Element(Element { tag: String::from("a"), attrs: attrs, children: children })
     })
@@ -247,14 +267,27 @@ fn process_include_tag(
     input: &InputContext,
 ) -> IO<Html> {
     if let Some(src_value) = attrs.get("src").cloned() {
-        let src_value = PathBuf::from(src_value);
+        let src_value = PathBuf::from(path_clean::clean(src_value));
         let source_io = IO::wrap(Html::Fragment(children));
         let resolved_path = input.source_dir().join(&src_value);
-        let template = process_html_file(&resolved_path, ParserMode::fragment("div")).unwrap();
+        println!("resolved_path: {resolved_path:?}");
+        let template = process_html_file(
+            &resolved_path,
+            ParserMode::fragment("div"),
+            &input.project_root,
+        )
+            .unwrap();
+            // .map(|template| {
+            //     let path_rewrite = crate::pass::path_rewrite::PathRewrite {
+            //         from_original: path_clean::clean(resolved_path),
+            //         to_target: path_clean::clean(input.source_path.clone()),
+            //     };
+            //     template.apply_path_rewrite(&path_rewrite)
+            // });
         let mut baked_node = crate::template::bake_template_content(template, source_io.clone(), false);
         let dependency = Dependency {
-            origin: input.source_path.clone(),
-            target: src_value,
+            origin: path_clean::clean(&input.source_path),
+            target: path_clean::clean(src_value),
             internal: true,
         };
         baked_node.context.dependencies.insert(dependency);
@@ -265,15 +298,20 @@ fn process_include_tag(
     })
 }
 
-/// Determine if an href points to a local file.
-fn is_local_href(href: &str) -> bool {
-    // Trim whitespace and decode HTML entities like &amp;
-    let decoded = html_escape::decode_html_entities(href.trim());
+// /// Determine if an href points to a local file.
+// fn is_local_href(href: &str) -> bool {
+//     // Trim whitespace and decode HTML entities like &amp;
+//     let decoded = html_escape::decode_html_entities(href.trim());
 
-    // Reject URLs that are clearly external
-    let lowered = decoded.to_ascii_lowercase();
-    !(lowered.starts_with("http://")
-        || lowered.starts_with("https://")
-        || lowered.starts_with("//"))
+//     // Reject URLs that are clearly external
+//     let lowered = decoded.to_ascii_lowercase();
+//     !(lowered.starts_with("http://")
+//         || lowered.starts_with("https://")
+//         || lowered.starts_with("//"))
+// }
+
+fn ensure_absolute_path_prefix(route: &str) -> String {
+    let route = route.strip_prefix("/").map(ToOwned::to_owned).unwrap_or_else(|| route.to_string());
+    let route = format!("/{route}");
+    route
 }
-

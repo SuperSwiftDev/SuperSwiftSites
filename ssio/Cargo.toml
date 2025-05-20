@@ -12,13 +12,18 @@ serde_json = { version = "1.0", features = ["preserve_order"]}
 path-clean = "1.0.1"
 pathdiff = "0.2.3"
 html-escape = "0.2"
+toml = "0.8.22"
 
 # —— PARSING ——————————————————————————————————————————————————————————————————
-html5ever = "0.26"
+# html5ever = "0.26"
 # markup5ever = "0.10"
-tendril = "0.4"
 # markup5ever_rcdom = "0.2"
+tendril = "0.4"
 once_cell = "1.19"
+
+html5ever = "0.25.1"
+markup5ever = "0.10.0"
+markup5ever_rcdom = "0.1.0"
 
 # —— DEBUGGING ————————————————————————————————————————————————————————————————
 pretty-tree = { git = "https://github.com/colbyn/pretty-tree-rs.git", rev = "7b75084"}

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use pretty_tree::ToPrettyTree;
+use pretty_tree::{PrettyTreePrinter, ToPrettyTree};
 
 // ————————————————————————————————————————————————————————————————————————————
 // DATA MODEL
@@ -21,41 +21,49 @@ pub struct Element {
 
 impl Html {
     pub fn parse(source: &str, mode: ParserMode) -> Html {
-        match mode {
+        let result = match mode {
             ParserMode::Document => Self::parse_document(source),
             ParserMode::Fragment { context } => Self::parse_fragment(source, &context)
+        };
+        result
+    }
+    fn parse_fragment(source: &str, context: &str) -> Html {
+        // crate::html_parser::parse_html_fragment(source, context).normalize()
+        let _ = context;
+        Self::parse_document(source)
+    }
+    fn parse_document(source: &str) -> Html {
+        // crate::html_parser::parse_html_document(source).normalize()
+        let result = crate::html_parser::parse_html_str(source);
+        if result.payload.len() == 1 {
+            return result.payload.get(0).unwrap().clone()
         }
-    }
-    pub fn parse_fragment(source: &str, context: &str) -> Html {
-        crate::html_parser::parse_html_fragment(source, context).normalize()
-    }
-    pub fn parse_document(source: &str) -> Html {
-        crate::html_parser::parse_html_document(source).normalize()
+        Html::Fragment(result.payload)
     }
 }
 
-impl crate::html_parser::Html {
-    pub fn normalize(self) -> Html {
-        match self {
-            crate::html_parser::Html::Element(element) => element.normalize(),
-            crate::html_parser::Html::Fragment(nodes) => {
-                let nodes = nodes.into_iter().map(|x| x.normalize()).collect();
-                Html::Fragment(nodes)
-            },
-            crate::html_parser::Html::Text(text) => Html::Text(text),
-        }
-    }
-}
+// impl crate::html_parser::Html {
+//     pub fn normalize(self) -> Html {
+//         match self {
+//             crate::html_parser::Html::Element(element) => element.normalize(),
+//             crate::html_parser::Html::Fragment(nodes) => {
+//                 let nodes = nodes.into_iter().map(|x| x.normalize()).collect();
+//                 Html::Fragment(nodes)
+//             },
+//             crate::html_parser::Html::Text(text) => Html::Text(text),
+//         }
+//     }
+// }
 
-impl crate::html_parser::Element {
-    pub fn normalize(self) -> Html {
-        let children = self.children
-            .into_iter()
-            .map(|x| x.normalize())
-            .collect();
-        Html::Element(Element { tag: self.tag, attrs: self.attrs, children: children })
-    }
-}
+// impl crate::html_parser::Element {
+//     pub fn normalize(self) -> Html {
+//         let children = self.children
+//             .into_iter()
+//             .map(|x| x.normalize())
+//             .collect();
+//         Html::Element(Element { tag: self.tag, attrs: self.attrs, children: children })
+//     }
+// }
 
 // ————————————————————————————————————————————————————————————————————————————
 // DEBUG

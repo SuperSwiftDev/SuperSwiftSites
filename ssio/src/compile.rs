@@ -83,7 +83,7 @@ impl Compiler {
                     .unwrap_or_else(|| {
                         let out = src_path.strip_prefix(&self.project_root).unwrap();
                         let out = out.to_path_buf();
-                        println!("[<{:?}>] {src_path:?} {out:?}", self.project_root);
+                        // println!("[<{:?}>] {src_path:?} {out:?}", self.project_root);
                         self.output_dir.join(out)
                     });
                 (src_path, page, out_path)
@@ -93,7 +93,7 @@ impl Compiler {
             .iter()
             .map(|(_, x, _)| x.context.clone())
             .fold(OutputContext::default(), |acc, x| { acc.merge(x) });
-        println!("{env:#?}");
+        // println!("{env:#?}");
         let dependencies = env.dependencies
             .clone()
             .into_iter()
@@ -169,7 +169,7 @@ impl Compiler {
                 &target_path
             ).unwrap();
         }
-        println!("asset_inputs: {asset_inputs:#?}");
+        // println!("asset_inputs: {asset_inputs:#?}");
         for (src_path, page, out_path) in route_pages {
             assert!(out_path != src_path);
             assert!(out_path.starts_with(&self.output_dir));
@@ -183,7 +183,7 @@ impl Compiler {
                     output_dir: self.output_dir.clone(),
                 },
             };
-            println!("{context:#?}");
+            // println!("{context:#?}");
             let page_html = page.value.resolve_virtual_paths(&context);
             // let page_html = page.value.resolve_virtual_paths(&VirtualPathContext {
             //     output_directory: self.output_dir.clone(),

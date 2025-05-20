@@ -73,6 +73,7 @@ pub fn is_external_url(href: &str) -> bool {
         || lowered.starts_with("https://")
         || lowered.starts_with("//")
         || lowered.starts_with("mailto:")
+        || lowered.starts_with("tel:")
         || lowered.starts_with("#")
 }
 

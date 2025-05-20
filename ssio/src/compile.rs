@@ -153,6 +153,23 @@ impl Compiler {
             //     keep
             // })
             .collect::<Vec<_>>();
+        let asset_inputs = env.dependencies
+            .iter()
+            .filter(|x| !x.internal)
+            .map(|x| x.target.clone())
+            // .map(|x| x.resolved_target_file_path(&self.output_dir))
+            .map(|x| path_clean::clean(x))
+            .collect::<Vec<_>>();
+        for dependency in dependencies {
+            let full_resolved_path = dependency.resolved_source_file_path();
+            let target_path = dependency.resolved_target_file_path(&self.output_dir);
+            // println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
+            crate::symlink::create_relative_symlink(
+                &full_resolved_path,
+                &target_path
+            ).unwrap();
+        }
+        println!("asset_inputs: {asset_inputs:#?}");
         for (src_path, page, out_path) in route_pages {
             assert!(out_path != src_path);
             assert!(out_path.starts_with(&self.output_dir));
@@ -161,7 +178,7 @@ impl Compiler {
                 origin_file_path: src_path.clone(),
                 resolver: PathResolver {
                     input_rules: self.input_paths.clone(),
-                    asset_inputs: Default::default(),
+                    asset_inputs: asset_inputs.clone(),
                     project_root: self.project_root.clone(),
                     output_dir: self.output_dir.clone(),
                 },
@@ -192,15 +209,6 @@ impl Compiler {
                 }
                 std::fs::write(&out_path, page_str).unwrap();
             }
-        }
-        for dependency in dependencies {
-            let full_resolved_path = dependency.resolved_source_file_path();
-            let target_path = dependency.resolved_target_file_path(&self.output_dir);
-            // println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
-            crate::symlink::create_relative_symlink(
-                &full_resolved_path,
-                &target_path
-            ).unwrap();
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, path::PathBuf};
 
-use pretty_tree::PrettyTreePrinter;
+use pretty_tree::{PrettyTreePrinter, ToPrettyTree};
 
 use crate::html::{Element, Html, ParserMode};
 
@@ -266,36 +266,30 @@ fn process_include_tag(
     children: Vec<Html>,
     input: &InputContext,
 ) -> IO<Html> {
+    let content = process_fragment(children, input).map(|children| {
+        Html::Fragment(children)
+    });
     if let Some(src_value) = attrs.get("src").cloned() {
         let src_value = PathBuf::from(path_clean::clean(src_value));
-        let source_io = IO::wrap(Html::Fragment(children));
         let resolved_path = input.source_dir().join(&src_value);
-        // println!("resolved_path: {resolved_path:?}");
         let template = process_html_file(
             &resolved_path,
             ParserMode::fragment("div"),
             &input.project_root,
-        )
-            .unwrap();
-            // .map(|template| {
-            //     let path_rewrite = crate::pass::path_rewrite::PathRewrite {
-            //         from_original: path_clean::clean(resolved_path),
-            //         to_target: path_clean::clean(input.source_path.clone()),
-            //     };
-            //     template.apply_path_rewrite(&path_rewrite)
-            // });
-        let mut baked_node = crate::template::bake_template_content(template, source_io.clone(), false);
+        ).unwrap();
+        let mut baked_node = crate::template::bake_template_content(template, content, false);
         let dependency = Dependency {
             origin: path_clean::clean(&input.source_path),
             target: path_clean::clean(src_value),
             internal: true,
         };
         baked_node.context.dependencies.insert(dependency);
+        println!("resolved_path: {resolved_path:?}");
+        // println!("resolved_path: {resolved_path:?}:{}", baked_node.value.to_pretty_tree());
         return baked_node
     }
-    process_fragment(children, input).map(|children| {
-        Html::Fragment(children)
-    })
+    eprintln!("⚠️ FAILED TO RESOLVE INCLUDE IN FILE: {:?}", input.source_path);
+    content
 }
 
 // /// Determine if an href points to a local file.

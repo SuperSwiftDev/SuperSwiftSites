@@ -85,21 +85,29 @@ pub fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(target_path: P, link_path:
 
 
 /// Create a relative symlink from `link_path` to `real_path`, only if needed.
-pub fn create_relative_symlink(real_path: &Path, link_path: &Path) -> std::io::Result<()> {
+pub fn create_relative_symlink(real_path: impl AsRef<Path>, link_path: impl AsRef<Path>) -> std::io::Result<()> {
+    let real_path= real_path.as_ref();
+    let link_path = link_path.as_ref();
+    // let real_path= path_clean::clean(real_path);
+    // let link_path = path_clean::clean(link_path);
     let link_dir = link_path.parent().expect("Link must have a parent");
 
     // Ensure link directory exists
-    fs::create_dir_all(link_dir)?;
+    fs::create_dir_all(link_dir).unwrap();
 
     // Compute relative path from symlink location to real target
     let relative_target = diff_paths(real_path, link_dir)
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Failed to compute relative path"))?;
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Failed to compute relative path"))
+        .unwrap();
 
     // Check if symlink exists and is correct
     if link_path.exists() {
         // Read existing symlink target (only works if it's actually a symlink)
         #[cfg(unix)]
-        let current_target = fs::read_link(link_path)?;
+        let current_target = fs::read_link(&link_path)
+            .unwrap_or_else(|errror| {
+                panic!("FAILED TO READ SYM-LINK {link_path:?}: {errror}\n{errror:?}");
+            });
 
         #[cfg(windows)]
         let current_target = {
@@ -123,13 +131,13 @@ pub fn create_relative_symlink(real_path: &Path, link_path: &Path) -> std::io::R
             if DEBUG_MODE {
                 println!("⚠️ Symlink exists but points elsewhere. Replacing it.");
             }
-            fs::remove_file(link_path)?;
+            fs::remove_file(&link_path).unwrap();
         }
     }
 
     // Create symlink
     #[cfg(unix)]
-    unix_fs::symlink(&relative_target, link_path)?;
+    unix_fs::symlink(&relative_target, &link_path).unwrap();
 
     #[cfg(windows)]
     windows_fs::symlink_file(&relative_target, link_path)?;

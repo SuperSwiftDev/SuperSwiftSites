@@ -156,14 +156,14 @@ impl Compiler {
         let asset_inputs = env.dependencies
             .iter()
             .filter(|x| !x.internal)
-            .map(|x| x.target.clone())
+            .map(|x| x.resolved_source_file_path())
             // .map(|x| x.resolved_target_file_path(&self.output_dir))
             .map(|x| path_clean::clean(x))
             .collect::<Vec<_>>();
         for dependency in dependencies {
             let full_resolved_path = dependency.resolved_source_file_path();
             let target_path = dependency.resolved_target_file_path(&self.output_dir);
-            // println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
+            println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
             crate::symlink::create_relative_symlink(
                 &full_resolved_path,
                 &target_path
@@ -177,18 +177,14 @@ impl Compiler {
                 output_file_path: out_path.clone(),
                 origin_file_path: src_path.clone(),
                 resolver: PathResolver {
-                    input_rules: self.input_paths.clone(),
-                    asset_inputs: asset_inputs.clone(),
+                    source_input_rules: self.input_paths.clone(),
+                    asset_input_rules: asset_inputs.clone(),
                     project_root: self.project_root.clone(),
                     output_dir: self.output_dir.clone(),
                 },
             };
             // println!("{context:#?}");
             let page_html = page.value.resolve_virtual_paths(&context);
-            // let page_html = page.value.resolve_virtual_paths(&VirtualPathContext {
-            //     output_directory: self.output_dir.clone(),
-            //     output_file_path: out_path.clone(),
-            // });
             let page_str = if self.pretty_print {
                 page_html.pretty_html_string()
             } else {

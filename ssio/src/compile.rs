@@ -34,46 +34,28 @@ pub struct BundleRule {
 impl Compiler {
     pub fn run(&self) {
         std::fs::create_dir_all(&self.output_dir).unwrap();
-        let template_path = self.template_path.as_ref();
-        let template = template_path
-            .map(|path| {
-                match process_html_file(path, crate::html::ParserMode::Document, &self.project_root) {
-                    Ok(x) => x,
-                    Err(error) => {
-                        eprintln!("Failed to read file: {path:?}");
-                        panic!("{error}")
-                    }
+        let template = self.template_path.as_ref().map(|path| {
+            match process_html_file(path, crate::html::ParserMode::Document, &self.project_root) {
+                Ok(x) => x,
+                Err(error) => {
+                    eprintln!("Failed to read file: {path:?}");
+                    panic!("{error}")
                 }
-            })
-            .inspect(|out| {
-                // out.value.print_pretty_tree();
-            });
+            }
+        });
         let page_contents = self.input_paths
             .clone()
             .into_iter()
             .map(|rule| {
-                let source_io = process_html_file(&rule.source, ParserMode::fragment("div"), &self.project_root).unwrap();
+                let source_io = process_html_file(
+                    &rule.source,
+                    ParserMode::fragment("div"),
+                    &self.project_root
+                ).unwrap();
                 let baked_io = template
                     .clone()
                     .map(|template| {
                         crate::template::bake_template_content(template, source_io.clone(), true)
-                    })
-                    .inspect(|baked| {
-                        // baked.value.print_pretty_tree();
-                    })
-                    .map(|template| {
-                        if let Some(template_path) = template_path {
-                            template
-                                // .map(|template| {
-                                //     let path_rewrite = crate::pass::path_rewrite::PathRewrite {
-                                //         from_original: path_clean::clean(template_path),
-                                //         to_target: path_clean::clean(file_path.clone()),
-                                //     };
-                                //     template.apply_path_rewrite(&path_rewrite)
-                                // })
-                        } else {
-                            template
-                        }
                     })
                     .unwrap_or_else(|| source_io.clone());
                 // baked_io.value.print_pretty_tree();
@@ -81,16 +63,12 @@ impl Compiler {
             })
             .map(|(src_path, page, out_path)| {
                 let out_path = out_path
-                    // .inspect(|out| {
-                    //     println!(">> {src_path:?} => {out:?}")
-                    // })
                     .map(|out| {
                         self.output_dir.join(out)
                     })
                     .unwrap_or_else(|| {
                         let out = src_path.strip_prefix(&self.project_root).unwrap();
                         let out = out.to_path_buf();
-                        // println!("[<{:?}>] {src_path:?} {out:?}", self.project_root);
                         self.output_dir.join(out)
                     });
                 (src_path, page, out_path)
@@ -104,62 +82,21 @@ impl Compiler {
         let dependencies = env.dependencies
             .clone()
             .into_iter()
-            .filter(|x| !x.internal)
+            .filter(|x| {
+                !x.internal
+            })
             .filter(|x| {
                 let full_resolved_path = x.resolved_source_file_path();
-                full_resolved_path.exists()
+                let keep = full_resolved_path.exists();
+                // println!("> {keep} {full_resolved_path:?}");
+                keep
             })
             .collect::<Vec<_>>();
         let site_links = env.site_link
             .clone()
             .into_iter()
-            // .map(|x| (x.full_file_path(), x))
-            .flat_map(|x| {
-                vec![
-                    // (x.full_file_path(), x.clone()),
-                    // (x.target.clone(), x.clone()),
-                    (x.normalized_target(), x),
-                ]
-            })
+            .map(|x| (x.normalized_target(), x))
             .collect::<HashMap<_, _>>();
-        let mut compiled_pages = HashSet::<PathBuf>::default();
-        let route_pages = page_contents
-            .into_iter()
-            // .filter_map(|(src_path, output, _)| {
-            //     if let Some(route) = site_links.get(&src_path) {
-            //         return Some((route.clone(), output))
-            //     }
-            //     println!("NOPE: {src_path:?}");
-            //     None
-            // })
-            // .map(|(source_path, page, out_target)| {
-            //     let external = route.public
-            //         .as_ref()
-            //         .and_then(|x| {
-            //             Option::<&String>::None
-            //         })
-            //         .map(|public| {
-            //             public
-            //                 .strip_prefix("/")
-            //                 .map(ToOwned::to_owned)
-            //                 .unwrap_or(public.clone())
-            //         })
-            //         .unwrap_or_else(|| {
-            //             let target = route.target.clone();
-            //             let target = target.to_str().unwrap().to_string();
-            //             target
-            //         });
-            //     let output_target = self.output_dir.join(&external);
-            //     (route, page, output_target)
-            // })
-            // .filter(|(route, contents, output_target)| {
-            //     let keep = !compiled_pages.contains(output_target);
-            //     if keep {
-            //         compiled_pages.insert(output_target.clone());
-            //     }
-            //     keep
-            // })
-            .collect::<Vec<_>>();
         let asset_context = AssetContext {
             project_directory: self.project_root.clone(),
             output_directory: self.output_dir.clone(),
@@ -198,19 +135,20 @@ impl Compiler {
                 &target_path
             ).unwrap();
         }
-        // println!("asset_inputs: {asset_inputs:#?}");
-        for (src_path, page, out_path) in route_pages {
+        let path_resolver = PathResolver {
+            source_input_rules: self.input_paths.clone(),
+            asset_input_rules: asset_inputs.clone(),
+            project_root: self.project_root.clone(),
+            output_dir: self.output_dir.clone(),
+        };
+        // println!("{path_resolver:#?}");
+        for (src_path, page, out_path) in page_contents {
             assert!(out_path != src_path);
             assert!(out_path.starts_with(&self.output_dir));
             let context = VirtualPathContext {
                 output_file_path: out_path.clone(),
                 origin_file_path: src_path.clone(),
-                resolver: PathResolver {
-                    source_input_rules: self.input_paths.clone(),
-                    asset_input_rules: asset_inputs.clone(),
-                    project_root: self.project_root.clone(),
-                    output_dir: self.output_dir.clone(),
-                },
+                resolver: path_resolver.clone(),
             };
             // println!("{context:#?}");
             let page_html = page.value.resolve_virtual_paths(&context);

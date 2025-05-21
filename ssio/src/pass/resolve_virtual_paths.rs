@@ -97,11 +97,10 @@ pub fn rewrite_path(
         }
     } else {
         eprintln!(
-            "⚠️  Could not resolve output path for target {:?} (normalized: {:?}) in {:?}\n\t{:?}",
+            "⚠️  Could not resolve output path for target {:?} (normalized: {:?}) in {:?}",
             href,
             resolved_target,
             origin_file,
-            resolver.asset_input_rules
         );
     }
 }
@@ -118,7 +117,7 @@ pub struct PathResolver {
 }
 
 impl PathResolver {
-    pub fn resolve_output_path_resolved(&self, resolved_target: &Path) -> Option<PathBuf> {
+    fn resolve_output_path_resolved(&self, resolved_target: &Path) -> Option<PathBuf> {
         self.try_resolve_input_rule(resolved_target)
             .or_else(|| {
                 self.try_resolve_asset_dep(resolved_target)

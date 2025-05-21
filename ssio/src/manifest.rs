@@ -24,6 +24,9 @@ pub struct ProjectManifest {
 
     #[serde(default)]
     pub assets: Vec<AssetRule>,
+
+    #[serde(default)]
+    pub bundles: Vec<BundleRule>,
 }
 
 fn default_root() -> PathBuf {
@@ -61,13 +64,23 @@ pub struct ManualRewriteRule {
 
 /// Static assets to copy into output directory
 #[derive(Debug, Deserialize)]
-pub struct AssetRule {
-    /// Glob pattern to match asset files
-    pub pattern: String,
+#[serde(untagged)]
+pub enum AssetRule {
+    Glob {
+        /// Glob pattern to match asset files
+        pattern: String,
 
-    /// Prefix to strip when copying assets to output
-    #[serde(default)]
-    pub strip_prefix: Option<String>,
+        /// Prefix to strip when copying assets to output
+        #[serde(default)]
+        strip_prefix: Option<String>,
+    }
+}
+
+/// Static assets to copy into output directory
+#[derive(Debug, Deserialize)]
+pub struct BundleRule {
+    /// Glob pattern to match asset files
+    pub location: PathBuf,
 }
 
 
@@ -83,6 +96,14 @@ impl ProjectManifest {
         let manifest_dir = manifest_dir.as_ref();
         let working_dir = manifest_dir.join(&self.root);
         std::env::set_current_dir(&working_dir).unwrap();
+        let bundles = self.bundles
+            .iter()
+            .map(|bundle| {
+                crate::compile::BundleRule {
+                    location: bundle.location.clone(),
+                }
+            })
+            .collect::<Vec<_>>();
         let inputs = self.globs
             .iter()
             .flat_map(|rule| {
@@ -108,6 +129,7 @@ impl ProjectManifest {
             template_path: self.template.clone(),
             output_dir: self.output_dir.clone(),
             pretty_print: self.pretty_print,
+            bundles,
         };
         compiler.run();
     }

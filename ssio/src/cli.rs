@@ -71,6 +71,7 @@ impl CompileCli {
             template_path: self.template.clone(),
             output_dir: self.output.clone(),
             pretty_print: self.pretty_print.unwrap_or(true),
+            bundles: Default::default(),
         };
         compiler.run();
     }

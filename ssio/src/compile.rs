@@ -3,6 +3,7 @@ use std::{collections::{HashMap, HashSet}, path::PathBuf};
 // use pretty_tree::PrettyTreePrinter;
 
 use pretty_tree::PrettyTreePrinter;
+use serde::Deserialize;
 
 use crate::{html::ParserMode, pass::resolve_virtual_paths::{PathResolver, VirtualPathContext}, process::{process_html_file, Dependency, OutputContext, SiteLink}};
 
@@ -13,6 +14,7 @@ pub struct Compiler {
     pub input_paths: Vec<InputRule>,
     pub output_dir: PathBuf,
     pub pretty_print: bool,
+    pub bundles: Vec<BundleRule>,
 }
 
 /// Input file with optional rewrite rule
@@ -22,6 +24,11 @@ pub struct InputRule {
     pub source: PathBuf,
     /// Desired output path
     pub target: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone)]
+pub struct BundleRule {
+    pub location: PathBuf,
 }
 
 impl Compiler {
@@ -153,6 +160,10 @@ impl Compiler {
             //     keep
             // })
             .collect::<Vec<_>>();
+        let asset_context = AssetContext {
+            project_directory: self.project_root.clone(),
+            output_directory: self.output_dir.clone(),
+        };
         let asset_inputs = env.dependencies
             .iter()
             .filter(|x| !x.internal)
@@ -164,9 +175,23 @@ impl Compiler {
             })
             .map(|x| x.clean())
             .collect::<Vec<_>>();
+        // println!("{:#?}", self.bundles);
+        for bundle in self.bundles.iter() {
+            let source = bundle.location.clone();
+            let output = self.output_dir.join(&bundle.location);
+            // println!("BUNDLE: {source:?} => {output:?}");
+            crate::symlink::create_relative_symlink(
+                &source,
+                &output
+            ).unwrap();
+        }
         for dependency in dependencies {
             let full_resolved_path = dependency.resolved_source_file_path();
             let target_path = dependency.resolved_target_file_path(&self.output_dir);
+            if dependency.should_ignore(&self.bundles, &asset_context) {
+                // println!("IGNORING: {dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
+                continue;
+            }
             // println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
             crate::symlink::create_relative_symlink(
                 &full_resolved_path,
@@ -231,6 +256,21 @@ impl Dependency {
     fn resolved_target_file_path(&self, output_dir: impl AsRef<std::path::Path>) -> PathBuf {
         output_dir.as_ref().join(&self.target)
     }
+    fn should_ignore(&self, bundles: &[BundleRule], asset_context: &AssetContext) -> bool {
+        let target = self.target.as_path();
+        let target = target
+            .strip_prefix(&asset_context.project_directory)
+            .unwrap_or_else(|_| target);
+        let matches_bundle = bundles
+            .iter()
+            .find(|bundle| {
+                let bundle_path = bundle.location
+                    .strip_prefix(&asset_context.project_directory)
+                    .unwrap_or_else(|_| &bundle.location);
+                target.starts_with(bundle_path)
+            });
+        matches_bundle.is_some()
+    }
 }
 
 impl InputRule {
@@ -240,4 +280,10 @@ impl InputRule {
             target: self.target.map(|target| path_clean::clean(&target)),
         }
     }
+}
+
+#[derive(Debug, Clone)]
+struct AssetContext {
+    pub project_directory: PathBuf,
+    pub output_directory: PathBuf,
 }

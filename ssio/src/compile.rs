@@ -163,7 +163,7 @@ impl Compiler {
         for dependency in dependencies {
             let full_resolved_path = dependency.resolved_source_file_path();
             let target_path = dependency.resolved_target_file_path(&self.output_dir);
-            println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
+            // println!("{dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
             crate::symlink::create_relative_symlink(
                 &full_resolved_path,
                 &target_path

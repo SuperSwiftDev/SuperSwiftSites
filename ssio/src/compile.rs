@@ -156,9 +156,13 @@ impl Compiler {
         let asset_inputs = env.dependencies
             .iter()
             .filter(|x| !x.internal)
-            .map(|x| x.resolved_source_file_path())
-            // .map(|x| x.resolved_target_file_path(&self.output_dir))
-            .map(|x| path_clean::clean(x))
+            .map(|x| {
+                InputRule {
+                    source: x.resolved_source_file_path(),
+                    target: Some(x.resolved_target_file_path(&self.output_dir))
+                }
+            })
+            .map(|x| x.clean())
             .collect::<Vec<_>>();
         for dependency in dependencies {
             let full_resolved_path = dependency.resolved_source_file_path();
@@ -209,37 +213,7 @@ impl Compiler {
     }
 }
 
-
-// impl OutputContext {
-//     pub fn notable_files(&self) -> HashSet<PathBuf> {
-//         let xs = self.routes
-//             .clone()
-//             .into_iter()
-//             .map(|x| {
-//                 x.full_file_path()
-//             })
-//             .collect::<HashSet<_>>();
-//         xs
-//     }
-// }
-
 impl SiteLink {
-    // fn full_file_path(&self) -> PathBuf {
-    //     let base = self.origin.parent().unwrap();
-    //     let target = self.public
-    //         .clone()
-    //         .unwrap_or_else(|| {
-    //             let target = self.target.clone();
-    //             let target = target.to_str().unwrap().to_string();
-    //             target
-    //         });
-    //     let full = base.join(target);
-    //     let full = path_clean::clean(&full);
-    //     full
-    // }
-    // fn matches(&self, target_path: impl AsRef<std::path::Path>) -> bool {
-    //     target_path.as_ref() == self.full_file_path().as_path()
-    // }
     fn normalized_target(&self) -> PathBuf {
         let origin_dir = self.origin.parent().unwrap();
         let normalized_target = origin_dir.join(&self.target);
@@ -256,5 +230,14 @@ impl Dependency {
     }
     fn resolved_target_file_path(&self, output_dir: impl AsRef<std::path::Path>) -> PathBuf {
         output_dir.as_ref().join(&self.target)
+    }
+}
+
+impl InputRule {
+    pub fn clean(self) -> Self {
+        Self {
+            source: path_clean::clean(&self.source),
+            target: self.target.map(|target| path_clean::clean(&target)),
+        }
     }
 }

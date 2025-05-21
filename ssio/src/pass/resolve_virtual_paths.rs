@@ -112,7 +112,7 @@ pub struct PathResolver {
     /// HTML input files.
     pub source_input_rules: Vec<InputRule>,
     /// Static assets.
-    pub asset_input_rules: Vec<PathBuf>,
+    pub asset_input_rules: Vec<InputRule>,
     pub project_root: PathBuf,
     pub output_dir: PathBuf,
 }
@@ -124,39 +124,31 @@ impl PathResolver {
                 self.try_resolve_asset_dep(resolved_target)
             })
     }
-
     fn try_resolve_input_rule(&self, resolved_target: &Path) -> Option<PathBuf> {
-        // Site input files
-        if let Some(rule) = self.source_input_rules.iter().find(|rule| {
-            path_clean::clean(&rule.source) == path_clean::clean(resolved_target)
-        }) {
+        Self::lookup_input_rule(resolved_target, &self.source_input_rules).map(|rule| {
             let output_rel = rule
                 .target
                 .clone()
                 .unwrap_or_else(|| rule.source.strip_prefix(&self.project_root).unwrap().to_path_buf());
-
-            return Some(self.output_dir.join(output_rel));
-        }
-        None
+            self.output_dir.join(output_rel)
+        })
     }
     fn try_resolve_asset_dep(&self, resolved_target: &Path) -> Option<PathBuf> {
-        let project_root = path_clean::clean(&self.project_root);
-        self.asset_input_rules
+        // self.resolve_target_path(resolved_target, &self.asset_input_rules)
+        Self::lookup_input_rule(resolved_target, &self.asset_input_rules).map(|rule| {
+            rule
+                .target
+                .clone()
+                .unwrap_or_else(|| rule.source.strip_prefix(&self.project_root).unwrap().to_path_buf())
+        })
+    }
+    fn lookup_input_rule(resolved_target: &Path, rules: &[InputRule]) -> Option<InputRule> {
+        rules
             .iter()
-            .find(|asset| {
-                let left = path_clean::clean(asset);
-                let right = path_clean::clean(resolved_target);
-                let is_match = left == right;
-                return is_match
+            .find(|rule| {
+                path_clean::clean(&rule.source) == path_clean::clean(resolved_target)
             })
-            .map(|asset| path_clean::clean(asset))
-            .map(|asset| {
-                let asset_path = asset
-                    .strip_prefix(&project_root)
-                    .map(ToOwned::to_owned)
-                    .unwrap_or_else(|_| asset.to_owned());
-                self.output_dir.join(asset_path)
-            })
+            .map(ToOwned::to_owned)
     }
 }
 

@@ -62,27 +62,33 @@ fn process_include_tag(
         Html::Fragment(children)
     });
     if let Some(src_value) = attrs.get("src").cloned() {
-        let src_value = PathBuf::from(path_clean::clean(src_value));
         let resolved_path = scope.source_dir().join(&src_value);
-        let template = super::load::load_html_file(
-            &resolved_path,
-            ParserMode::fragment("div"),
-            &scope.project_root,
-        ).unwrap(); // TODO: SAFE HANDLING
-        // let template = process_html_file(
-        //     &resolved_path,
-        //     ParserMode::fragment("div"),
-        //     &input.project_root,
-        // ).unwrap();
-        let mut baked_node = crate::template::bake_template_content(template, content, false);
+        // - DEPENDENCY -
         let dependency = Dependency {
             origin: path_clean::clean(&scope.source_path),
             target: path_clean::clean(src_value),
             is_internal: Some(true),
         };
+        // - LOAD -
+        let template = super::load::load_html_file(
+            &resolved_path,
+            ParserMode::fragment("div"),
+            &scope.project_root,
+        );
+        let template = match template {
+            Ok(x) => x,
+            Err(error) => {
+                let source_path = scope.source_path.as_path();
+                if let Some(error) = error.downcast_ref::<std::io::Error>() {
+                    eprintln!("⚠️ {source_path:?} file not found: {resolved_path:?}");
+                } else {
+                    eprintln!("⚠️ {source_path:?}: {error}");
+                }
+                return State::wrap(Html::Fragment(Vec::default()))
+            }
+        };
+        let mut baked_node = crate::template::bake_template_content(template, content, false);
         baked_node.aggregator.static_dependencies.insert(dependency); // TODO: NOT A STATIC DEPENDENCY
-        // println!("resolved_path: {resolved_path:?}");
-        // println!("resolved_path: {resolved_path:?}:{}", baked_node.value.to_pretty_tree());
         return baked_node
     }
     eprintln!("⚠️ FAILED TO RESOLVE INCLUDE IN FILE: {:?}", scope.source_path);

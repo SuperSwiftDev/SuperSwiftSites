@@ -5,7 +5,9 @@ use std::{collections::{HashMap, HashSet}, path::PathBuf};
 use pretty_tree::PrettyTreePrinter;
 use serde::Deserialize;
 
-use crate::{html::ParserMode, pass::resolve_virtual_paths::{PathResolver, VirtualPathContext}, process::{process_html_file, Dependency, OutputContext, SiteLink}};
+use crate::{html::ParserMode, pass::{postprocess::PostprocessEnvironment, system::{Aggregator, Dependency}}};
+use crate::dependency_tracking::resolve_virtual_paths::{PathResolver, VirtualPathContext};
+// use crate::process::{process_html_file, Dependency, OutputContext, SiteLink};
 
 #[derive(Debug, Clone)]
 pub struct Compiler {
@@ -35,7 +37,7 @@ impl Compiler {
     pub fn run(&self) {
         std::fs::create_dir_all(&self.output_dir).unwrap();
         let template = self.template_path.as_ref().map(|path| {
-            match process_html_file(path, crate::html::ParserMode::Document, &self.project_root) {
+            match crate::pass::load::load_html_file(path, ParserMode::Document, &self.project_root) {
                 Ok(x) => x,
                 Err(error) => {
                     eprintln!("Failed to read file: {path:?}");
@@ -47,7 +49,7 @@ impl Compiler {
             .clone()
             .into_iter()
             .map(|rule| {
-                let source_io = process_html_file(
+                let source_io = crate::pass::load::load_html_file(
                     &rule.source,
                     ParserMode::fragment("div"),
                     &self.project_root
@@ -74,16 +76,21 @@ impl Compiler {
                 (src_path, page, out_path)
             })
             .collect::<Vec<_>>();
-        let env = page_contents
-            .iter()
-            .map(|(_, x, _)| x.context.clone())
-            .fold(OutputContext::default(), |acc, x| { acc.merge(x) });
+        // let env = page_contents
+        //     .iter()
+        //     .map(|(_, x, _)| x.aggregator.clone())
+        //     .fold(OutputContext::default(), |acc, x| { acc.merge(x) });
+        let env = Aggregator::flatten(
+            page_contents
+                .iter()
+                .map(|(_, x, _)| x.aggregator.clone())
+        );
         // println!("{env:#?}");
-        let dependencies = env.dependencies
+        let static_dependencies = env.static_dependencies
             .clone()
             .into_iter()
             .filter(|x| {
-                !x.internal
+                !x.is_internal.unwrap_or(false)
             })
             .filter(|x| {
                 let full_resolved_path = x.resolved_source_file_path();
@@ -92,7 +99,7 @@ impl Compiler {
                 keep
             })
             .collect::<Vec<_>>();
-        let site_links = env.site_link
+        let site_links = env.source_dependencies
             .clone()
             .into_iter()
             .map(|x| (x.normalized_target(), x))
@@ -101,9 +108,9 @@ impl Compiler {
             project_directory: self.project_root.clone(),
             output_directory: self.output_dir.clone(),
         };
-        let asset_inputs = env.dependencies
+        let asset_inputs = env.static_dependencies
             .iter()
-            .filter(|x| !x.internal)
+            .filter(|x| !x.is_internal.unwrap_or(false))
             .map(|x| {
                 InputRule {
                     source: x.resolved_source_file_path(),
@@ -122,9 +129,10 @@ impl Compiler {
                 &output
             ).unwrap();
         }
-        for dependency in dependencies {
-            let full_resolved_path = dependency.resolved_source_file_path();
-            let target_path = dependency.resolved_target_file_path(&self.output_dir);
+        for dependency in static_dependencies {
+            let full_resolved_path = path_clean::clean(dependency.resolved_source_file_path());
+            let target_path = path_clean::clean(dependency.resolved_target_file_path(&self.output_dir));
+            // println!("{:#?}", self.bundles);
             if dependency.should_ignore(&self.bundles, &asset_context) {
                 // println!("IGNORING: {dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
                 continue;
@@ -145,20 +153,27 @@ impl Compiler {
         for (src_path, page, out_path) in page_contents {
             assert!(out_path != src_path);
             assert!(out_path.starts_with(&self.output_dir));
-            let context = VirtualPathContext {
-                output_file_path: out_path.clone(),
+            // let context = VirtualPathContext {
+            //     output_file_path: out_path.clone(),
+            //     origin_file_path: src_path.clone(),
+            //     resolver: path_resolver.clone(),
+            // };
+            // // println!("{context:#?}");
+            // let page_html = page.value.resolve_virtual_paths(&context);
+            let postprocess_environment = PostprocessEnvironment {
                 origin_file_path: src_path.clone(),
+                output_file_path: out_path.clone(),
                 resolver: path_resolver.clone(),
             };
-            // println!("{context:#?}");
-            let page_html = page.value.resolve_virtual_paths(&context);
+            let finalized_html = page.value.postprocess(&postprocess_environment);
+
             let page_str = if self.pretty_print {
-                page_html.pretty_html_string()
+                finalized_html.pretty_html_string()
             } else {
                 let doctype = "<!DOCTYPE html>";
                 format!(
                     "{doctype}{}",
-                    page_html.html_string(&Default::default()),
+                    finalized_html.html_string(&Default::default()),
                 )
             };
             let should_write = std::fs::read_to_string(&out_path)
@@ -176,7 +191,7 @@ impl Compiler {
     }
 }
 
-impl SiteLink {
+impl Dependency {
     fn normalized_target(&self) -> PathBuf {
         let origin_dir = self.origin.parent().unwrap();
         let normalized_target = origin_dir.join(&self.target);
@@ -192,20 +207,29 @@ impl Dependency {
         full
     }
     fn resolved_target_file_path(&self, output_dir: impl AsRef<std::path::Path>) -> PathBuf {
-        output_dir.as_ref().join(&self.target)
+        output_dir.as_ref().join(self.resolved_source_file_path())
     }
+    // TODO: SUPER MESSY
     fn should_ignore(&self, bundles: &[BundleRule], asset_context: &AssetContext) -> bool {
-        let target = self.target.as_path();
+        let project_directory = path_clean::clean(&asset_context.project_directory);
+        let target = path_clean::clean(&self.target);
         let target = target
-            .strip_prefix(&asset_context.project_directory)
-            .unwrap_or_else(|_| target);
+            .strip_prefix(&project_directory)
+            .map(ToOwned::to_owned)
+            .unwrap_or_else(|_| target.clone());
+        let target = path_clean::clean(target);
+        let full_resolved_path = self.resolved_source_file_path();
         let matches_bundle = bundles
             .iter()
             .find(|bundle| {
+                let bundle_location = path_clean::clean(&bundle.location);
                 let bundle_path = bundle.location
-                    .strip_prefix(&asset_context.project_directory)
-                    .unwrap_or_else(|_| &bundle.location);
-                target.starts_with(bundle_path)
+                    .strip_prefix(&project_directory)
+                    .unwrap_or_else(|_| &bundle_location);
+                let bundle_path = path_clean::clean(bundle_path);
+                let match_result_1 = target.starts_with(&bundle_path);
+                let match_result_2 = full_resolved_path.starts_with(&bundle_path);
+                match_result_1 || match_result_2
             });
         matches_bundle.is_some()
     }

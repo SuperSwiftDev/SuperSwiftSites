@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use pretty_tree::PrettyTreePrinter;
 
-use crate::{compile::Compiler, html::ParserMode, process::process_html_file};
+use crate::compile::Compiler;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

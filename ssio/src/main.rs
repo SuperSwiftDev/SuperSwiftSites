@@ -16,6 +16,7 @@ pub mod manifest;
 pub mod symlink;
 pub mod pass;
 pub mod path_utils;
+pub mod dependency_tracking;
 
 fn main() {
     cli::Cli::parse().execute();

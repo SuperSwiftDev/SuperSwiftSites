@@ -3,73 +3,62 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    compile::InputRule,
-    html::{Element, Html},
-};
+use crate::html::Html;
+use crate::html::Element;
+use crate::compile::InputRule;
+
+use super::data::REQUIRES_REGULAR_DEPENDENCY_TRACKING;
+use super::data::TAG_MAY_REQUIRE_DEPENDENCY_TRACKING;
+use super::data::REQUIRES_SRC_SET_DEPENDENCY_TRACKING;
+use super::data::SrcsetCandidate;
 
 #[derive(Debug, Clone)]
-pub struct VirtualPathContext {
-    /// The file path where the output will be written
-    pub output_file_path: PathBuf,
+pub struct VirtualPathContext<'a> {
     /// The source file path this HTML node came from
-    pub origin_file_path: PathBuf,
+    pub origin_file_path: &'a Path,
+    /// The file path where the output will be written
+    pub output_file_path: &'a Path,
     /// The virtual link resolver
-    pub resolver: PathResolver,
+    pub resolver: &'a PathResolver,
 }
 
 // === Rewriting Paths in Html ===
 
-impl Html {
-    pub fn resolve_virtual_paths(self, context: &VirtualPathContext) -> Self {
-        match self {
-            Self::Element(element) => Self::Element(element.resolve_virtual_paths(context)),
-            Self::Text(text) => Self::Text(text),
-            Self::Fragment(nodes) => Self::Fragment(
-                nodes
-                    .into_iter()
-                    .map(|x| x.resolve_virtual_paths(context))
-                    .collect(),
-            ),
-        }
-    }
-}
-
-impl Element {
-    pub fn resolve_virtual_paths(self, context: &VirtualPathContext) -> Self {
-        let children = self
-            .children
-            .into_iter()
-            .map(|x| x.resolve_virtual_paths(context))
-            .collect();
-
-        let attrs = process_attributes(self.attrs, context);
-        Self {
-            attrs,
-            children,
-            tag: self.tag,
-        }
-    }
-}
-
-fn process_attributes(
-    mut attributes: HashMap<String, String>,
-    context: &VirtualPathContext,
-) -> HashMap<String, String> {
-    for key in ["href", "src"] {
-        if let Some(val) = attributes.get_mut(key) {
+pub fn resolve_virtual_paths(tag: &str, attributes: &mut HashMap<String, String>, context: &VirtualPathContext) {
+    let tag = tag.to_lowercase();
+    for (key, value) in attributes.iter_mut() {
+        let key = key.to_lowercase();
+        if REQUIRES_REGULAR_DEPENDENCY_TRACKING.contains(&(&tag, &key)) {
             rewrite_path(
-                val,
+                value,
                 &context.origin_file_path,
                 &context.output_file_path,
                 &context.resolver,
             );
         }
+        else if REQUIRES_SRC_SET_DEPENDENCY_TRACKING.contains(&(&tag, &key)) {
+            let source_sets = SrcsetCandidate::parse_srcset(value)
+                .into_iter()
+                .map(|SrcsetCandidate { mut url, descriptor }| {
+                    rewrite_path(
+                        &mut url,
+                        &context.origin_file_path,
+                        &context.output_file_path,
+                        &context.resolver,
+                    );
+                    SrcsetCandidate {
+                        url,
+                        descriptor: descriptor,
+                    }
+                })
+                .collect::<Vec<_>>();
+            let rewritten_source_sets = SrcsetCandidate::format_srcset(&source_sets);
+            *value = rewritten_source_sets;
+        }
     }
-    attributes
 }
 
-pub fn rewrite_path(
+fn rewrite_path(
     href: &mut String,
     origin_file: &Path,
     output_file: &Path,

@@ -1,64 +1,65 @@
-use crate::{html::{Element, Html}, process::{OutputContext, IO}};
+use crate::{html::{Element, Html}, pass::system::{Aggregator, State}};
 
 pub fn bake_template_content(
-    template: IO<Html>,
-    content: IO<Html>,
+    template: State<Html>,
+    content: State<Html>,
     is_implicit: bool
-) -> IO<Html> {
+) -> State<Html> {
     process_template(template, content, is_implicit)
 }
 
-fn process_template(template: IO<Html>, content: IO<Html>, is_implicit: bool) -> IO<Html> {
+fn process_template(template: State<Html>, content: State<Html>, is_implicit: bool) -> State<Html> {
     let mut is_baked: bool = false;
-    let IO { context, value } = template;
-    let result = value.bake_template_content(&context, &content, &mut is_baked);
+    let State { aggregator, value } = template;
+    let result = value.bake_template_content(&aggregator, &content, &mut is_baked);
     if !is_baked && is_implicit {
-        return content.map_with(|x, ctx| {
+        return content.map_with(|x, ctx: &mut Aggregator| {
             // ctx.include(context);
-            ctx.include(result.context);
+            ctx.include(result.aggregator);
             x
         })
     }
     result.map_with(|x, ctx| {
-        ctx.include(context);
-        ctx.include(content.context);
+        ctx.include(aggregator);
+        ctx.include(content.aggregator);
         x
     })
 }
 
 impl Html {
-    fn bake_template_content(self, template_ctx: &OutputContext, content: &IO<Html>, is_baked: &mut bool) -> IO<Html> {
+    fn bake_template_content(self, aggregator: &Aggregator, content: &State<Html>, is_baked: &mut bool) -> State<Html> {
         match self {
-            Self::Element(element) => element.bake_template_content(template_ctx, content, is_baked),
+            Self::Element(element) => element.bake_template_content(aggregator, content, is_baked),
             Self::Fragment(nodes) => {
+                let nodes_len = nodes.len();
                 let nodes = nodes
                     .into_iter()
-                    .map(|x| x.bake_template_content(template_ctx, content, is_baked))
-                    .collect::<Vec<_>>();
-                return IO::flatten(nodes).map(Html::Fragment)
+                    .map(|x| x.bake_template_content(aggregator, content, is_baked));
+                return State::flatten(nodes, Some(nodes_len)).map(Html::Fragment)
             }
-            _ => IO::wrap(self)
+            _ => State::wrap(self)
         }
     }
 }
 
 impl Element {
-    fn bake_template_content(self, template_ctx: &OutputContext, content: &IO<Html>, is_baked: &mut bool) -> IO<Html> {
+    fn bake_template_content(self, aggregator: &Aggregator, content: &State<Html>, is_baked: &mut bool) -> State<Html> {
         if self.tag.as_str() == "content" {
             *is_baked = true;
-            return merge(content.clone(), &template_ctx)
+            return merge(content.clone(), &aggregator)
         }
+        let children_len = self.children.len();
         let children = self.children
             .into_iter()
-            .map(|x| x.bake_template_content(template_ctx, content, is_baked))
+            .map(|x| x.bake_template_content(aggregator, content, is_baked))
             .collect::<Vec<_>>();
-        return IO::flatten(children).map(|xs| {
+        return State::flatten(children, Some(children_len)).map(|xs| {
             Html::Element(Element { tag: self.tag, attrs: self.attrs, children: xs })
         })
     }
 }
 
-fn merge(mut content: IO<Html>, template_ctx: &OutputContext) -> IO<Html> {
-    content.context.include(template_ctx.clone());
+fn merge(mut content: State<Html>, aggregator: &Aggregator) -> State<Html> {
+    content.aggregator.include(aggregator.clone());
     content
 }

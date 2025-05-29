@@ -46,68 +46,25 @@ pub fn create_symlink<P: AsRef<Path>, Q: AsRef<Path>>(target_path: P, link_path:
     Ok(())
 }
 
-// /// Create a relative symlink from `link_path` to `real_path`.
-// pub fn create_relative_symlink(real_path: &Path, link_path: &Path) -> std::io::Result<()> {
-//     // Ensure parent directory exists
-//     if let Some(parent) = link_path.parent() {
-//         fs::create_dir_all(parent)?;
-//     }
-
-//     // Clean up any existing link
-//     if link_path.exists() {
-//         fs::remove_file(link_path)?;
-//     }
-
-//     // Compute relative path from link's parent to real path
-//     let link_dir = link_path.parent().expect("Link has no parent");
-//     let relative_target = pathdiff::diff_paths(real_path, link_dir)
-//         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Failed to compute relative path"))?;
-
-//     #[cfg(unix)]
-//     {
-//         symlink(&relative_target, &link_path)?;
-//     }
-
-//     #[cfg(windows)]
-//     {
-//         symlink_file(&relative_target, &link_path)?;
-//     }
-
-//     println!(
-//         "Symlink created: {:?} → {:?}",
-//         link_path.display(),
-//         relative_target.display()
-//     );
-
-//     Ok(())
-// }
-
-
-
-/// Create a relative symlink from `link_path` to `real_path`, only if needed.
-pub fn create_relative_symlink(real_path: impl AsRef<Path>, link_path: impl AsRef<Path>) -> std::io::Result<()> {
-    let real_path= real_path.as_ref();
-    let link_path = link_path.as_ref();
-    // let real_path= path_clean::clean(real_path);
-    // let link_path = path_clean::clean(link_path);
+/// Create a symbolic link at `link_path` pointing to `source_path`; only if needed.
+/// 
+/// Handles platform differences and ensures parent directories exist.
+pub fn create_relative_symlink(source_path: impl AsRef<Path>, link_path: impl AsRef<Path>) -> Result<(), Box<dyn std::error::Error>> {
+    let source_path= path_clean::clean(source_path);
+    let link_path = path_clean::clean(link_path);
     let link_dir = link_path.parent().expect("Link must have a parent");
 
     // Ensure link directory exists
     fs::create_dir_all(link_dir).unwrap();
 
     // Compute relative path from symlink location to real target
-    let relative_target = diff_paths(real_path, link_dir)
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Failed to compute relative path"))
-        .unwrap();
+    let relative_target = diff_paths(source_path, link_dir).unwrap();
 
     // Check if symlink exists and is correct
     if link_path.exists() {
         // Read existing symlink target (only works if it's actually a symlink)
         #[cfg(unix)]
-        let current_target = fs::read_link(&link_path)
-            .unwrap_or_else(|errror| {
-                panic!("FAILED TO READ SYM-LINK {link_path:?}: {errror}\n{errror:?}");
-            });
+        let current_target = fs::read_link(&link_path)?;
 
         #[cfg(windows)]
         let current_target = {
@@ -137,7 +94,7 @@ pub fn create_relative_symlink(real_path: impl AsRef<Path>, link_path: impl AsRe
 
     // Create symlink
     #[cfg(unix)]
-    unix_fs::symlink(&relative_target, &link_path).unwrap();
+    unix_fs::symlink(&relative_target, &link_path)?;
 
     #[cfg(windows)]
     windows_fs::symlink_file(&relative_target, link_path)?;

@@ -124,15 +124,31 @@ impl Compiler {
             let source = bundle.location.clone();
             let output = self.output_dir.join(&bundle.location);
             // println!("BUNDLE: {source:?} => {output:?}");
-            crate::symlink::create_relative_symlink(
+            if !source.exists() {
+                eprintln!("⚠️ skipping bundle: {source:?} (file does not exist)");
+                continue;
+            }
+            let result = crate::symlink::create_relative_symlink(
                 &source,
                 &output
-            ).unwrap();
+            );
+            match result {
+                Ok(()) => (),
+                Err(error) => {
+                    // if let Some(error) = error.downcast_ref::<std::io::Error>() {}
+                    eprintln!("Failed to create symlink: {source:?} → {output:?}");
+                    eprintln!("{error}");
+                }
+            }
         }
         for dependency in static_dependencies {
             let full_resolved_path = path_clean::clean(dependency.resolved_source_file_path());
             let target_path = path_clean::clean(dependency.resolved_target_file_path(&self.output_dir));
             // println!("{:#?}", self.bundles);
+            if !full_resolved_path.exists() {
+                eprintln!("⚠️ skipping bundle: {full_resolved_path:?} (file does not exist)");
+                continue;
+            }
             if dependency.should_ignore(&self.bundles, &asset_context) {
                 // println!("IGNORING: {dependency:?}: {:?} => {:?}", full_resolved_path, target_path);
                 continue;

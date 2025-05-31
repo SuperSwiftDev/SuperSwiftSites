@@ -2,4 +2,7 @@
     html, body {
         background-color: #272727;
     }
+    img[data-auto-dark-mode="invert"] {
+        filter: invert(1);
+    }
 }

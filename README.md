@@ -89,3 +89,7 @@ Furthermore invoking `ssio` with `--template sample/base.html` will implicitly w
 </body>
 </html>
 ```
+
+---
+
+This project is based on an [old compiler](https://github.com/subscript-publishing/subscript-html) I wrote years ago for streamlining my school notes.

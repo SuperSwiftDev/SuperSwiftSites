@@ -1,9 +1,5 @@
-h1 {
-    color: red;
-}
-
 @media (prefers-color-scheme: dark) {
     html, body {
-        background-color: gray;
+        background-color: #272727;
     }
 }

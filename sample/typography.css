@@ -1,0 +1,32 @@
+html, body {
+    overflow-x: hidden;
+    position: relative;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6, p, li, a, address, blockquote, td, th, input, textarea, label, button {
+    font-family: "Roboto", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: normal;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+@media (prefers-color-scheme: dark) {
+    h1, h2, h3, h4, h5, h6, p, li, a, address, blockquote, pre, code, td, th, input, textarea, label, button {
+        color: #fff;
+    }
+    input, textarea {
+        background-color: #474747;
+        border: 1px solid #000000;
+    }
+    button {
+        background-color: #474747;
+        border: 1px solid #000000;
+    }
+}
+
+

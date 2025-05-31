@@ -1,0 +1,151 @@
+<article class="content">
+    <h1>HTML Element Showcase</h1>
+    <p>This is a long-form content sample designed to test base styles, typography, and layout responsiveness across
+        various HTML elements.</p>
+
+    <h2>Headings & Paragraphs</h2>
+    <p>
+        This paragraph includes <strong>strong</strong>, <em>emphasized</em>, <a href="#">a link</a>,
+        <code>inline code</code>,
+        and an abbreviation <abbr title="Hypertext Markup Language">HTML</abbr>. Here's <sub>subscript</sub> and
+        <sup>superscript</sup> too.
+    </p>
+
+    <h3>Blockquote Example</h3>
+    <blockquote>
+        "The purpose of testing is not to prove something works, but to find out where it breaks."
+    </blockquote>
+
+    <h2>Lists</h2>
+    <h3>Unordered List</h3>
+    <ul>
+        <li>List item one</li>
+        <li>List item two
+            <ul>
+                <li>Nested item A</li>
+                <li>Nested item B</li>
+            </ul>
+        </li>
+        <li>List item three</li>
+    </ul>
+
+    <h3>Ordered List</h3>
+    <ol>
+        <li>First step</li>
+        <li>Second step</li>
+        <li>Third step</li>
+    </ol>
+
+    <h2>Code</h2>
+    <pre><code class="language-js">const greet = (name) => {
+  console.log(`Hello, ${name}!`);
+};</code></pre>
+
+    <h2>Image</h2>
+    <img src="../logo.png" alt="Test image" style="max-width: 100%; height: auto;" />
+    <p>This image should scale with the container size to remain responsive.</p>
+
+    <h2>Wide Table (overflow-x)</h2>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Status</th>
+                    <th>Description</th>
+                    <th>Browser Support</th>
+                    <th>Performance Impact</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Responsive Design</td>
+                    <td>✅</td>
+                    <td>Adapts layout to various screen sizes</td>
+                    <td>All major browsers</td>
+                    <td>Low</td>
+                    <td>Use CSS media queries</td>
+                </tr>
+                <tr>
+                    <td>Lazy Loading</td>
+                    <td>✅</td>
+                    <td>Improves page load performance by deferring offscreen assets</td>
+                    <td>Chrome, Firefox, Edge</td>
+                    <td>Minimal</td>
+                    <td>Use <code>loading="lazy"</code> on images</td>
+                </tr>
+                <tr>
+                    <td>CSS Grid</td>
+                    <td>✅</td>
+                    <td>Modern layout system for 2D layouts</td>
+                    <td>All modern browsers</td>
+                    <td>None</td>
+                    <td>Fallback to flexbox for legacy support</td>
+                </tr>
+                <tr>
+                    <td>Variable Fonts</td>
+                    <td>⚠️</td>
+                    <td>Single font file with dynamic styles</td>
+                    <td>Modern browsers only</td>
+                    <td>Medium</td>
+                    <td>Test on low-powered devices</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Form Elements</h2>
+    <form>
+        <label for="name">Name</label><br />
+        <input type="text" id="name" name="name" /><br /><br />
+
+        <label for="email">Email</label><br />
+        <input type="email" id="email" name="email" /><br /><br />
+
+        <label for="msg">Message</label><br />
+        <textarea id="msg" name="msg" rows="4"></textarea><br /><br />
+
+        <label><input type="checkbox" name="newsletter" /> Subscribe to newsletter</label><br />
+        <label><input type="radio" name="option" value="a" /> Option A</label>
+        <label><input type="radio" name="option" value="b" /> Option B</label><br /><br />
+
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+    </form>
+
+    <h2>Horizontal Rule</h2>
+    <p>Use a horizontal rule to separate sections:</p>
+    <hr />
+
+    <h2>Lower Headings</h2>
+    <h3>Heading 3</h3>
+    <h4>Heading 4</h4>
+    <h5>Heading 5</h5>
+    <h6>Heading 6</h6>
+
+    <h2>Long Content Block</h2>
+    <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante
+        dapibus diam. Sed nisi.
+        Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue
+        semper porta.
+        Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia
+        nostra, per inceptos
+        himenaeos.
+    </p>
+    <p>
+        Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean
+        quam. In scelerisque sem
+        at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus
+        risus, iaculis vel,
+        suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum.
+    </p>
+    <p>
+        Nulla metus metus, ullamcorper vel, tincidunt sed, euismod in, nibh. Quisque volutpat condimentum velit. Class
+        aptent taciti sociosqu
+        ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, urna non tincidunt
+        mattis, tortor neque
+        adipiscing diam, a cursus ipsum ante quis turpis. Nulla facilisi. Ut fringilla.
+    </p>
+</article>

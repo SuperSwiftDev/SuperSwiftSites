@@ -28,42 +28,42 @@ impl Html {
         result
     }
     fn parse_fragment(source: &str, context: &str) -> Html {
-        // crate::html_parser::parse_html_fragment(source, context).normalize()
-        let _ = context;
-        Self::parse_document(source)
+        crate::html_parser2::parse_html_fragment(source, context).normalize()
+        // let _ = context;
+        // Self::parse_document(source)
     }
     fn parse_document(source: &str) -> Html {
-        // crate::html_parser::parse_html_document(source).normalize()
-        let result = crate::html_parser::parse_html_str(source);
-        if result.payload.len() == 1 {
-            return result.payload.get(0).unwrap().clone()
-        }
-        Html::Fragment(result.payload)
+        crate::html_parser2::parse_html_document(source).normalize()
+        // let result = crate::html_parser::parse_html_str(source);
+        // if result.payload.len() == 1 {
+        //     return result.payload.get(0).unwrap().clone()
+        // }
+        // Html::Fragment(result.payload)
     }
 }
 
-// impl crate::html_parser::Html {
-//     pub fn normalize(self) -> Html {
-//         match self {
-//             crate::html_parser::Html::Element(element) => element.normalize(),
-//             crate::html_parser::Html::Fragment(nodes) => {
-//                 let nodes = nodes.into_iter().map(|x| x.normalize()).collect();
-//                 Html::Fragment(nodes)
-//             },
-//             crate::html_parser::Html::Text(text) => Html::Text(text),
-//         }
-//     }
-// }
+impl crate::html_parser2::Html {
+    pub fn normalize(self) -> Html {
+        match self {
+            crate::html_parser2::Html::Element(element) => element.normalize(),
+            crate::html_parser2::Html::Fragment(nodes) => {
+                let nodes = nodes.into_iter().map(|x| x.normalize()).collect();
+                Html::Fragment(nodes)
+            },
+            crate::html_parser2::Html::Text(text) => Html::Text(text),
+        }
+    }
+}
 
-// impl crate::html_parser::Element {
-//     pub fn normalize(self) -> Html {
-//         let children = self.children
-//             .into_iter()
-//             .map(|x| x.normalize())
-//             .collect();
-//         Html::Element(Element { tag: self.tag, attrs: self.attrs, children: children })
-//     }
-// }
+impl crate::html_parser2::Element {
+    pub fn normalize(self) -> Html {
+        let children = self.children
+            .into_iter()
+            .map(|x| x.normalize())
+            .collect();
+        Html::Element(Element { tag: self.tag, attrs: self.attrs, children: children })
+    }
+}
 
 // ————————————————————————————————————————————————————————————————————————————
 // DEBUG

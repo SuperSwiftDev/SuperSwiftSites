@@ -6,6 +6,7 @@ use clap::Parser;
 
 pub mod html;
 pub mod html_parser;
+pub mod html_parser2;
 pub mod html_string;
 pub mod pretty_html;
 pub mod cli;

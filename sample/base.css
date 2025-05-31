@@ -1,8 +1,24 @@
+body {
+    position: relative;
+}
+
+img {
+    overflow: auto;
+}
+
+blockquote {
+    border-left: 2px solid #20202082;
+    padding-left: 8px;
+}
+
 @media (prefers-color-scheme: dark) {
     html, body {
-        background-color: #272727;
+        background-color: #1d1d1d;
     }
     img[data-auto-dark-mode="invert"] {
         filter: invert(1);
+    }
+    blockquote {
+        border-left: 2px solid #77777782;
     }
 }

@@ -14,19 +14,30 @@ pub struct PrettyPrinter {}
 pub struct Environment {
     indent: usize,
     format_type: FormatType,
+    escape_tokens: bool,
 }
 
 impl Environment {
     pub fn scope(&self, tag: &str) -> Environment {
+        let norm_tag = tag.trim().to_lowercase();
         let format_type = match self.format_type {
             FormatType::Block if crate::html::is_inline_tag(tag) => FormatType::Inline,
             _ => self.format_type
         };
-        let auto_indent = match tag {
+        let auto_indent: bool = match tag {
             "html" => false,
             "head" => false,
             "body" => false,
             _ => format_type == FormatType::Block,
+        };
+        let escape_tokens = if self.escape_tokens {
+            if norm_tag == "script" || norm_tag == "style" {
+                false
+            } else {
+                true
+            }
+        } else {
+            false
         };
         Environment {
             indent: {
@@ -37,15 +48,17 @@ impl Environment {
                 }
             },
             format_type: format_type,
+            escape_tokens: escape_tokens,
         }
     }
     pub fn indent(self) -> Environment {
-        Environment { indent: self.indent + 1, format_type: self.format_type }
+        Environment { indent: self.indent + 1, format_type: self.format_type, escape_tokens: self.escape_tokens }
     }
     pub fn inline(self) -> Environment {
         Environment {
             indent: self.indent,
             format_type: FormatType::Inline,
+            escape_tokens: self.escape_tokens,
         }
     }
     fn indent_spacing_string(&self) -> String {
@@ -53,6 +66,13 @@ impl Environment {
     }
     fn is_in_inline_mode(&self) -> bool {
         self.format_type == FormatType::Inline
+    }
+    fn with_escape_tokens(self, escape_tokens: bool) -> Self {
+        Self {
+            indent: self.indent,
+            format_type: self.format_type,
+            escape_tokens: escape_tokens
+        }
     }
 }
 
@@ -70,7 +90,8 @@ impl Default for Environment {
     fn default() -> Self {
         Environment {
             indent: 0,
-            format_type: FormatType::default()
+            format_type: FormatType::default(),
+            escape_tokens: true
         }
     }
 }
@@ -92,7 +113,13 @@ impl Html {
         match self {
             Self::Element(element) => element.html_string(environment),
             Self::Fragment(nodes) => format_fragment(&nodes, environment),
-            Self::Text(text) => text.to_owned(),
+            Self::Text(text) => {
+                if environment.escape_tokens {
+                    escape_html(text)
+                } else {
+                    text.to_owned()
+                }
+            },
         }
     }
 }
@@ -104,16 +131,17 @@ impl Element {
         let attributes = format_attributes(&self.attrs);
         if crate::html::is_void_tag(&self.tag) && self.children.len() == 0 {
             format!(
-                "<{tag} {attributes} />",
+                "<{tag}{attributes} />",
                 tag=self.tag,
             )
         } else {
+            // let environment = environment.with_escape_tokens()
             let children = format_fragment(&self.children, &environment);
             let contents = {
                 children
             };
             format!(
-                "<{tag} {attributes}>{contents}</{tag}>",
+                "<{tag}{attributes}>{contents}</{tag}>",
                 tag=self.tag,
             )
         }
@@ -164,3 +192,26 @@ fn indent_spacing_string(level: usize) -> String {
 // ————————————————————————————————————————————————————————————————————————————
 // INTERNAL
 // ————————————————————————————————————————————————————————————————————————————
+
+fn escape_html(input: &str) -> String {
+    let mut escaped = String::with_capacity(input.len() * 2);
+
+    for c in input.chars() {
+        match c {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '"' => escaped.push_str("&quot;"),
+            '\'' => escaped.push_str("&#39;"),
+            c if c as u32 > 127 => {
+                // Optional: numeric entity for non-ASCII
+                use std::fmt::Write;
+                write!(escaped, "&#x{:X};", c as u32).unwrap();
+            }
+            c => escaped.push(c),
+        }
+    }
+
+    escaped
+}
+

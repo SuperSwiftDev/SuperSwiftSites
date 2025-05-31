@@ -13,8 +13,8 @@ pub struct ProjectManifest {
     #[serde(default)]
     pub template: Option<PathBuf>,
 
-    #[serde(default = "default_pretty_print")]
-    pub pretty_print: bool,
+    #[serde(default)]
+    pub pretty_print: Option<bool>,
 
     #[serde(default)]
     pub globs: Vec<GlobRewriteRule>, 
@@ -92,7 +92,7 @@ pub fn load_project_manifest(path: impl AsRef<Path>) -> Result<ProjectManifest, 
 }
 
 impl ProjectManifest {
-    pub fn execute(&self, manifest_dir: impl AsRef<Path>) {
+    pub fn execute(&self, manifest_dir: impl AsRef<Path>, pretty_print: Option<bool>) {
         let manifest_dir = manifest_dir.as_ref();
         let working_dir = manifest_dir.join(&self.root);
         std::env::set_current_dir(&working_dir).unwrap();
@@ -128,7 +128,7 @@ impl ProjectManifest {
             input_paths: inputs,
             template_path: self.template.clone(),
             output_dir: self.output_dir.clone(),
-            pretty_print: self.pretty_print,
+            pretty_print: self.pretty_print.unwrap_or(pretty_print.unwrap_or(true)),
             bundles,
         };
         compiler.run();

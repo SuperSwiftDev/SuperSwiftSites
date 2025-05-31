@@ -41,7 +41,10 @@ pub struct CompileCli {
 #[derive(Parser, Debug)]
 pub struct BuildCli {
     #[arg(long)]
-    pub manifest: PathBuf
+    pub manifest: PathBuf,
+    /// Pretty-print HTML(5) files (more pretty); default value is true.
+    #[arg(long)]
+    pretty_print: Option<bool>,
 }
 
 impl Cli {
@@ -81,7 +84,7 @@ impl BuildCli {
     pub fn execute(self) {
         let manifest_dir = self.manifest.parent().unwrap();
         let manifest = crate::manifest::load_project_manifest(&self.manifest).unwrap();
-        manifest.execute(manifest_dir);
+        manifest.execute(manifest_dir, self.pretty_print);
     }
 }
 

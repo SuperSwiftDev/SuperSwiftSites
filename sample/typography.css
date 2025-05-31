@@ -15,6 +15,10 @@ h1, h2, h3, h4, h5, h6, p, li, a, address, blockquote, td, th, input, textarea, 
     font-variation-settings: "wdth" 100;
 }
 
+a {
+    color: #000;
+}
+
 @media (prefers-color-scheme: dark) {
     h1, h2, h3, h4, h5, h6, p, li, a, address, blockquote, pre, code, td, th, input, textarea, label, button {
         color: #fff;

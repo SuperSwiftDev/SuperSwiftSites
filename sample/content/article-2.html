@@ -1,0 +1,706 @@
+<header class="toc">
+    <h1>Contents</h1>
+    <nav aria-label="Main Navigation" class="toc">
+        <ul>
+            <li><a href="#main">Introduction</a></li>
+            <li><a href="#long-form-content">Long-Form Content</a></li>
+            <li><a href="#media">Multimedia</a></li>
+            <li><a href="#graphics">Graphics & Math</a></li>
+            <li><a href="#forms">Forms</a></li>
+            <li><a href="#interactive">Interactivity</a></li>
+            <li><a href="#accessibility">Accessibility</a></li>
+            <li><a href="#extended-forms">More Form Inputs</a></li>
+            <li><a href="#data-and-time">Data & Metadata</a></li>
+            <li><a href="#advanced-lists">Advanced Lists</a></li>
+            <li><a href="#figures-and-math">Figures & Canvas</a></li>
+            <li><a href="#code-samples">Code Samples</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <section id="main">
+        <h2>Introduction</h2>
+        <article>
+            <h3>Welcome to the HTML5 Showcase</h3>
+            <p>This page demonstrates the wide range of HTML5 elements. You can use it to test your CSS framework
+                visually and
+                functionally.</p>
+            <p>Enjoy exploring <strong>rich semantic elements</strong> and <em>modern browser features</em>.</p>
+        </article>
+
+        <article>
+            <h3>Common Text Structures</h3>
+            <p>Text decorations include: <small>small text</small>, <mark>highlighted text</mark>, <s>deleted</s>,
+                <u>underlined</u>, <b>bold</b>, <i>italic</i>.
+            </p>
+            <blockquote cite="https://developer.mozilla.org">
+                <p>Blockquotes indicate quoted text from external sources.</p>
+            </blockquote>
+            <p>Use <code>&lt;code&gt;</code> for code snippets and <kbd>Ctrl + S</kbd> for keyboard input. Variable
+                example:
+                <var>x = y + z</var>.
+            </p>
+            <p>Definitions: <dfn>HTML</dfn> is the standard language of the Web.</p>
+        </article>
+
+        <aside>
+            <p>This aside contains secondary content, perhaps related links or summaries.</p>
+        </aside>
+
+        <hr>
+
+        <ul>
+            <li>Bullet Point 1</li>
+            <li>Bullet Point 2</li>
+            <li>Bullet Point 3</li>
+        </ul>
+        <ol>
+            <li>First item</li>
+            <li>Second item</li>
+            <li>Third item</li>
+        </ol>
+        <dl>
+            <dt>HTML</dt>
+            <dd>HyperText Markup Language</dd>
+            <dt>CSS</dt>
+            <dd>Cascading Style Sheets</dd>
+        </dl>
+
+        <figure>
+            <img src="../media/pathway-besides-pink-flowers.jpg" alt="Example Image" />
+            <figcaption>A caption explaining the image</figcaption>
+        </figure>
+
+        <p>Date example: <time datetime="2025-05-31">May 31, 2025</time></p>
+        <p>Data example: <data value="12345">User ID</data></p>
+
+        <pre><code>function greet() {
+  console.log("Hello World");
+}</code></pre>
+
+        <p>Ruby characters: <ruby>語<rt>language</rt></ruby></p>
+        <p>Directional formatting: <bdo dir="rtl">Text in RTL</bdo> and isolated: <bdi>BDI Example</bdi></p>
+    </section>
+
+    <section id="long-form-content">
+        <h2>Long-Form Content Example</h2>
+
+        <article>
+            <h3>The Evolution of HTML</h3>
+            <p>HTML has undergone tremendous changes since its inception in the early 1990s. From a simple markup system
+                for
+                linking documents, it has evolved into a robust, semantic language that powers the modern web.</p>
+            <p>With the introduction of HTML5, developers gained access to native multimedia, semantic elements like
+                <code>&lt;article&gt;</code> and <code>&lt;section&gt;</code>, and a more accessible structure for
+                building
+                content-rich sites.
+            </p>
+            <p>While early versions of HTML focused on structure and presentation, modern best practices separate
+                concerns
+                through the use of CSS for styling and JavaScript for behavior. This separation improves maintainability
+                and
+                enhances the performance of web applications.</p>
+            <p>One of the key benefits of semantic HTML is accessibility. Screen readers and assistive technologies rely
+                on
+                well-structured HTML to interpret content meaningfully. Elements like <code>&lt;nav&gt;</code>,
+                <code>&lt;aside&gt;</code>, and <code>&lt;figure&gt;</code> help define the purpose of each part of the
+                page.
+            </p>
+            <p>As browsers evolve, they continue to improve support for the full range of HTML5 features. Developers can
+                now
+                build fully-featured apps with just HTML, CSS, and JavaScript—no plugins required.</p>
+        </article>
+
+        <article>
+            <h3>Why Semantic Markup Matters</h3>
+            <p>Semantic markup isn't just a buzzword; it's foundational for building websites that are discoverable,
+                accessible, and maintainable. By using appropriate tags to convey meaning, you're giving structure to
+                your
+                content in a way that machines and humans can both understand.</p>
+            <p>For instance, using <code>&lt;time datetime="2025-06-01"&gt;June 1, 2025&lt;/time&gt;</code> allows a
+                browser
+                to parse the actual date data, which can be used for calendar integration or machine indexing.</p>
+            <p>Similarly, using <code>&lt;blockquote cite="..."&gt;</code> links the quoted content to its source—making
+                it
+                easier to verify information and improve trust in your content. These small enhancements pay big
+                dividends in
+                usability.</p>
+            <p>When styling content-heavy pages, semantic structure also helps developers create consistent, scalable
+                layouts.
+                Targeting elements like <code>&lt;section&gt;</code> and <code>&lt;aside&gt;</code> with CSS is more
+                predictable
+                than using arbitrary <code>&lt;div&gt;</code>s with class names.</p>
+            <p>Whether you're building a blog, documentation site, or knowledge base, meaningful markup makes everything
+                better—from SEO to screen reader output.</p>
+        </article>
+
+        <article>
+            <h3>Testing Paragraph Layouts</h3>
+            <p>This article contains additional filler content designed to test paragraph rendering, spacing, and
+                wrapping.
+                You can use it to evaluate how your layout system handles vertical rhythm, whitespace, and responsive
+                behavior.
+            </p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec hendrerit, nulla non bibendum accumsan,
+                lorem
+                odio finibus justo, sit amet vulputate enim sapien a nisi. Nulla facilisi. Curabitur blandit vestibulum
+                enim a
+                rutrum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+            </p>
+            <p>Sed dignissim, erat a imperdiet tristique, sapien ligula placerat ante, vitae bibendum mi urna sit amet
+                sapien.
+                Aliquam erat volutpat. Vestibulum porta lacus ut magna hendrerit luctus. Nunc tempor, eros a iaculis
+                dapibus,
+                sapien risus laoreet libero, eget mattis turpis magna et orci.</p>
+            <p>Maecenas nec nulla vehicula, dapibus erat vel, convallis arcu. Suspendisse potenti. In pulvinar at diam
+                at
+                pretium. Morbi congue diam at lectus elementum fermentum. Integer tincidunt diam a ligula facilisis
+                faucibus.
+            </p>
+            <p>Aenean eu ligula et urna cursus lacinia non in lectus. Sed sit amet tincidunt nulla. Nulla vel rutrum mi.
+                Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras vel
+                accumsan
+                velit.</p>
+        </article>
+    </section>
+
+    <section id="media">
+        <h2>Multimedia</h2>
+        <video controls width="320">
+            <source src="../media/field.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+
+        <audio controls>
+            <source src="../media/fresh-focus.mp3" type="audio/mp3" />
+            Your browser does not support the audio tag.
+        </audio>
+    </section>
+
+    <section id="graphics">
+        <h2>Graphics and Math</h2>
+        <svg width="100" height="100">
+            <rect width="100" height="100" fill="blue" />
+        </svg>
+        <math>
+            <mrow>
+                <mi>a</mi>
+                <mo>=</mo>
+                <msqrt>
+                    <mi>b</mi>
+                </msqrt>
+            </mrow>
+        </math>
+    </section>
+
+    <section id="forms">
+        <h2>Forms and Inputs</h2>
+        <form>
+            <fieldset>
+                <legend>User Info</legend>
+
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" />
+
+                <label for="bio">Bio:</label>
+                <textarea id="bio" name="bio">Your bio here...</textarea>
+
+                <label for="range">Satisfaction:</label>
+                <input type="range" id="range" name="range" min="0" max="10" />
+
+                <label for="options">Choose an option:</label>
+                <select id="options">
+                    <optgroup label="Group A">
+                        <option>Option 1</option>
+                        <option>Option 2</option>
+                    </optgroup>
+                    <optgroup label="Group B">
+                        <option>Option 3</option>
+                    </optgroup>
+                </select>
+
+                <input list="suggestions" name="suggestion" />
+                <datalist id="suggestions">
+                    <option value="Suggestion A" />
+                    <option value="Suggestion B" />
+                </datalist>
+
+                <button type="submit">Submit</button>
+            </fieldset>
+            <output name="result">Output goes here</output>
+            <progress value="50" max="100">50%</progress>
+            <meter value="0.75">75%</meter>
+        </form>
+    </section>
+
+    <section id="interactive" style="min-height: 160px;">
+        <h2>Interactive Elements</h2>
+        <details>
+            <summary>Click to expand</summary>
+            <p>This is hidden until expanded.</p>
+        </details>
+
+        <dialog id="demoDialog" aria-labelledby="dialogTitle" aria-describedby="dialogDesc" open>
+            <h3 id="dialogTitle">Dialog Title</h3>
+            <p id="dialogDesc">This is an active dialog box.</p>
+            <button onclick="document.getElementById('demoDialog').close()">Close</button>
+        </dialog>
+    </section>
+
+    <section id="accessibility">
+        <h2>Accessibility Elements</h2>
+        <p role="note" aria-label="Screen-reader note">Use <code>aria-label</code> and <code>role</code> to improve
+            accessibility.</p>
+        <p tabindex="0">This paragraph is keyboard focusable.</p>
+        <div role="alert">This is an important alert message!</div>
+        <p lang="es">Este es un párrafo en español.</p>
+        <p lang="ja">これは日本語の段落です。</p>
+    </section>
+
+    <section id="extended-forms">
+        <h2>Extended Form Inputs</h2>
+        <form>
+            <fieldset>
+                <legend>Additional Inputs</legend>
+
+                <label for="tel">Phone:</label>
+                <input type="tel" id="tel" name="tel" placeholder="555-123-4567" />
+
+                <label for="datalist-input">Favorite Fruit:</label>
+                <input list="fruits" id="datalist-input" name="fruit" />
+                <datalist id="fruits">
+                    <option value="Apple" />
+                    <option value="Banana" />
+                    <option value="Cherry" />
+                </datalist>
+
+                <label for="files">Upload File:</label>
+                <input type="file" id="files" name="files" multiple />
+
+                <label for="reset">Reset Form:</label>
+                <input type="reset" value="Clear" />
+            </fieldset>
+        </form>
+    </section>
+
+    <section id="data-and-time">
+        <h2>Data, Time, and Metadata</h2>
+        <p>Published on: <time datetime="2025-06-01">June 1, 2025</time></p>
+        <p>Reading Progress: <progress value="80" max="100">80%</progress></p>
+        <p>System Load: <meter value="0.65">65%</meter></p>
+        <p>Dataset Entry: <data value="84921">Product #84921</data></p>
+    </section>
+
+    <section id="advanced-lists">
+        <h2>Advanced Lists</h2>
+        <ul>
+            <li>Item 1
+                <ul>
+                    <li>Subitem 1a</li>
+                    <li>Subitem 1b</li>
+                </ul>
+            </li>
+            <li>Item 2</li>
+        </ul>
+
+        <ol type="I" start="3">
+            <li>Third Roman</li>
+            <li>Fourth Roman</li>
+        </ol>
+
+        <dl>
+            <dt>CPU</dt>
+            <dd>Central Processing Unit</dd>
+            <dt>GPU</dt>
+            <dd>Graphics Processing Unit</dd>
+        </dl>
+    </section>
+
+    <section id="figures-and-math">
+        <h2>Figures, Canvas & Math</h2>
+        <figure>
+            <img src="../media/chart-placeholder.png" alt="Chart Placeholder" />
+            <figcaption>Figure 2.1: Sample Chart</figcaption>
+        </figure>
+
+        <canvas width="200" height="100" style="border:1px solid #000;"></canvas>
+
+        <math display="block">
+            <mrow>
+                <mi>E</mi>
+                <mo>=</mo>
+                <mi>m</mi>
+                <mo>&#x2062;</mo>
+                <msup>
+                    <mi>c</mi>
+                    <mn>2</mn>
+                </msup>
+            </mrow>
+        </math>
+    </section>
+
+    <section id="code-samples">
+        <h2>Code Samples</h2>
+        <pre><code class="language-js">const greet = name => `Hello, ${name}`;
+console.log(greet("World"));</code></pre>
+        <pre><code class="language-css">body {
+  font-family: system-ui;
+  line-height: 1.6;
+}</code></pre>
+        <pre><code class="language-html">&lt;section&gt;
+  &lt;h2&gt;Hello&lt;/h2&gt;
+&lt;/section&gt;</code></pre>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2025 HTML5 Elements Demo. All rights reserved.</p>
+    <address>Contact: <a href="mailto:webmaster@example.com">webmaster@example.com</a></address>
+</footer>
+
+<style>
+    img {
+        width: 100%;
+        height: auto;
+    }
+
+    section {
+        scroll-margin-top: var(--main-nav-height);
+    }
+</style>
+
+<style>
+    :root {
+        --font-base: 'Inter', system-ui, sans-serif;
+        --font-mono: 'Fira Code', monospace;
+        --text-color: #1a1a1a;
+        --muted-color: #555;
+        --bg-color: #f9f9fb;
+        --accent: #005fcc;
+        --accent-light: #e6f0ff;
+        --border-radius: 6px;
+        --max-content-width: 800px;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: var(--font-base);
+        color: var(--text-color);
+        line-height: 1.6;
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 0;
+    }
+
+    header.toc {
+        background: white;
+        border-bottom: 1px solid #ddd;
+        padding: 1rem;
+    }
+
+    header.toc h1 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    nav.toc ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0;
+        list-style: none;
+        margin: 1rem 0 0;
+    }
+
+    nav.toc a {
+        text-decoration: none;
+        color: var(--accent);
+        font-weight: 500;
+        padding: 0.3em 0.6em;
+        border-radius: var(--border-radius);
+    }
+
+    nav.toc a:hover,
+    nav.toc a:focus {
+        background: var(--accent-light);
+    }
+
+    main {
+        max-width: var(--max-content-width);
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    section {
+        margin-bottom: 4rem;
+        scroll-margin-top: var(--main-nav-height);
+    }
+
+    h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 0.25rem;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+        margin-top: 2rem;
+        color: var(--accent);
+    }
+
+    article {
+        margin-bottom: 2rem;
+    }
+
+    aside {
+        background: #fffbe6;
+        padding: 1rem;
+        border-left: 4px solid #ffd700;
+        margin-top: 2rem;
+        border-radius: var(--border-radius);
+    }
+
+    blockquote {
+        font-style: italic;
+        border-left: 4px solid #ccc;
+        padding-left: 1rem;
+        margin-left: 0;
+        color: var(--muted-color);
+    }
+
+    code,
+    kbd,
+    samp {
+        font-family: var(--font-mono);
+        background: #f4f4f4;
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+    }
+
+    pre {
+        padding: 1rem;
+        overflow: auto;
+        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+        background: #f4f4f4;
+    }
+
+    pre code {
+        padding: 0;
+    }
+
+    figure {
+        margin: 2rem 0;
+        text-align: center;
+    }
+
+    figcaption {
+        font-size: 0.9rem;
+        color: var(--muted-color);
+        margin-top: 0.5rem;
+    }
+
+    form {
+        display: grid;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    label {
+        font-weight: 500;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+        font: inherit;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: var(--border-radius);
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    input[type="range"] {
+        padding: 0.5rem 0;
+    }
+
+    button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #004bb5;
+    }
+
+    fieldset {
+        border: 1px solid #ddd;
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    fieldset label {
+        margin: 0;
+    }
+
+    legend {
+        font-weight: 600;
+        color: var(--accent);
+    }
+
+    details summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--accent);
+    }
+
+    dialog {
+        padding: 1.5rem;
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        max-width: 90%;
+    }
+
+    meter,
+    progress {
+        width: 100%;
+        height: 1rem;
+    }
+
+    ul,
+    ol,
+    dl {
+        margin-left: 1.5rem;
+    }
+
+    footer {
+        text-align: center;
+        padding: 2rem 1rem;
+        background: #eee;
+        font-size: 0.9rem;
+    }
+
+    address a {
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    address a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+        nav.toc ul {
+            flex-direction: column;
+        }
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --text-color: #f0f0f0;
+            --muted-color: #aaa;
+            --bg-color: #121212;
+            --accent: #66aaff;
+            --accent-light: #1e2a40;
+        }
+
+        header.toc {
+            background-color: #1a1a1a;
+            border-bottom-color: #333;
+        }
+
+        nav.toc a {
+            color: var(--accent);
+        }
+
+        nav.toc a:hover,
+        nav.toc a:focus {
+            background-color: var(--accent-light);
+        }
+
+        section,
+        article,
+        form,
+        aside,
+        fieldset,
+        dialog {
+            background-color: #1e1e1e;
+            color: var(--text-color);
+            border-color: #333;
+        }
+
+        h2 {
+            border-bottom-color: var(--accent);
+        }
+
+        blockquote {
+            border-left-color: #444;
+            color: var(--muted-color);
+        }
+
+        code,
+        pre,
+        kbd {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        pre {
+            background-color: #0f111a;
+            color: #f8f8f2;
+        }
+
+        button {
+            background: var(--accent);
+            color: #000;
+        }
+
+        button:hover {
+            background: #5599dd;
+        }
+
+        footer {
+            background-color: #1a1a1a;
+            color: #888;
+        }
+
+        input,
+        select,
+        textarea {
+            background-color: #2a2a2a;
+            color: var(--text-color);
+            border-color: #444;
+        }
+
+        meter,
+        progress {
+            background: #2a2a2a;
+            color: var(--accent);
+        }
+
+        dialog {
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        img {
+            filter: brightness(0.9) contrast(1.1);
+        }
+    }
+</style>

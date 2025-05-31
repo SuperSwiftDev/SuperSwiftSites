@@ -188,7 +188,7 @@ impl Compiler {
             } else {
                 let doctype = "<!DOCTYPE html>";
                 format!(
-                    "{doctype}{}",
+                    "{doctype}\n{}",
                     finalized_html.html_string(&Default::default()),
                 )
             };

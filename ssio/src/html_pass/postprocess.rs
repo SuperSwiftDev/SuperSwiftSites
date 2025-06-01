@@ -41,6 +41,18 @@ impl Element {
         let Element { tag, mut attrs, children } = self;
         resolve_virtual_paths(&tag, &mut attrs, &env.virtual_path_context());
         let children = postprocess_fragment(children, env);
+        let norm_tag = tag.to_lowercase();
+        match norm_tag.as_str() {
+            "style" => {
+                let source_code = Html::Fragment(children).to_text().unwrap();
+                let source_code = crate::css_process::post_process(&source_code, env);
+                let children = vec![
+                    Html::Text(source_code),
+                ];
+                return Element { tag, attrs, children }
+            }
+            _ => ()
+        }
         Element { tag, attrs, children }
     }
 }

@@ -1,4 +1,4 @@
-use crate::{html::{Element, Html}, pass::system::{Aggregator, State}};
+use crate::{html::{Element, Html}, html_pass::system::{Aggregator, State}};
 
 pub fn bake_template_content(
     template: State<Html>,

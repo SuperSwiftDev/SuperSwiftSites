@@ -58,6 +58,20 @@ pub fn resolve_virtual_paths(tag: &str, attributes: &mut HashMap<String, String>
     }
 }
 
+pub fn to_resolved_path(
+    href: &str,
+    origin_file: &Path,
+    output_file: &Path,
+    resolver: &PathResolver,
+) -> String {
+    let mut result = href.to_string();
+    if !result.starts_with("@/") {
+        return result
+    }
+    rewrite_path(&mut result, origin_file, output_file, resolver);
+    result
+}
+
 fn rewrite_path(
     href: &mut String,
     origin_file: &Path,

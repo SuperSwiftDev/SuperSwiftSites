@@ -5,7 +5,7 @@ use std::{collections::{HashMap, HashSet}, path::PathBuf};
 use pretty_tree::PrettyTreePrinter;
 use serde::Deserialize;
 
-use crate::{html::ParserMode, pass::{postprocess::PostprocessEnvironment, system::{Aggregator, Dependency}}};
+use crate::{html::ParserMode, html_pass::{postprocess::PostprocessEnvironment, system::{Aggregator, Dependency}}};
 use crate::dependency_tracking::resolve_virtual_paths::{PathResolver, VirtualPathContext};
 // use crate::process::{process_html_file, Dependency, OutputContext, SiteLink};
 
@@ -37,7 +37,7 @@ impl Compiler {
     pub fn run(&self) {
         std::fs::create_dir_all(&self.output_dir).unwrap();
         let template = self.template_path.as_ref().map(|path| {
-            match crate::pass::load::load_html_file(path, ParserMode::Document, &self.project_root) {
+            match crate::html_pass::load::load_html_file(path, ParserMode::Document, &self.project_root) {
                 Ok(x) => x,
                 Err(error) => {
                     eprintln!("Failed to read file: {path:?}");
@@ -49,7 +49,7 @@ impl Compiler {
             .clone()
             .into_iter()
             .map(|rule| {
-                let source_io = crate::pass::load::load_html_file(
+                let source_io = crate::html_pass::load::load_html_file(
                     &rule.source,
                     ParserMode::fragment("div"),
                     &self.project_root

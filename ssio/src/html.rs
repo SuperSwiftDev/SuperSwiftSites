@@ -40,8 +40,46 @@ impl Html {
         // }
         // Html::Fragment(result.payload)
     }
+    pub fn to_text(&self) -> Result<String, ()> {
+        match self {
+            Self::Element(x) => x.to_text(),
+            Self::Text(x) => Ok(x.to_owned()),
+            Self::Fragment(xs) => fragment_to_text(xs),
+        }
+    }
 }
 
+impl Element {
+    pub fn has_tag(&self, tag: impl AsRef<str>) -> bool {
+        self.tag.to_lowercase() == tag.as_ref().to_lowercase()
+    }
+    pub fn to_text(&self) -> Result<String, ()> {
+        fragment_to_text(&self.children)
+    }
+}
+
+fn fragment_to_text(nodes: &[Html]) -> Result<String, ()> {
+    let results = nodes
+        .into_iter()
+        .map(|x| x.to_text())
+        .collect::<Vec<_>>();
+    let mut output = String::default();
+    for result in results {
+        match result {
+            Ok(txt) => {
+                output.push_str(&txt);
+            }
+            Err(_) => {
+                return Err(())
+            }
+        }
+    }
+    Ok(output)
+}
+
+// ————————————————————————————————————————————————————————————————————————————
+// CONVERSTION
+// ————————————————————————————————————————————————————————————————————————————
 impl crate::html_parser2::Html {
     pub fn normalize(self) -> Html {
         match self {

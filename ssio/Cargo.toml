@@ -14,7 +14,7 @@ pathdiff = "0.2.3"
 html-escape = "0.2"
 toml = "0.8.22"
 
-# —— PARSING ——————————————————————————————————————————————————————————————————
+# —— HTML PARSING —————————————————————————————————————————————————————————————
 # html5ever = "0.26"
 # markup5ever = "0.10"
 # markup5ever_rcdom = "0.2"
@@ -24,6 +24,9 @@ once_cell = "1.19"
 html5ever = "0.25.1"
 markup5ever = "0.10.0"
 markup5ever_rcdom = "0.1.0"
+
+# —— CSS PARSING ——————————————————————————————————————————————————————————————
+lightningcss = { version = "1.0.0-alpha.66", features = ['visitor']}
 
 # —— DEBUGGING ————————————————————————————————————————————————————————————————
 pretty-tree = { git = "https://github.com/colbyn/pretty-tree-rs.git", rev = "7b75084"}

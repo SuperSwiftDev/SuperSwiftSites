@@ -3,10 +3,10 @@ use std::path::PathBuf;
 
 use crate::html::Html;
 use crate::html::Element;
-use crate::pass::system::State;
-use crate::pass::system::Aggregator;
-use crate::pass::system::Dependency;
-use crate::pass::system::Scope;
+use crate::html_pass::system::State;
+use crate::html_pass::system::Aggregator;
+use crate::html_pass::system::Dependency;
+use crate::html_pass::system::Scope;
 
 use super::data::REQUIRES_REGULAR_DEPENDENCY_TRACKING;
 use super::data::REQUIRES_SRC_SET_DEPENDENCY_TRACKING;

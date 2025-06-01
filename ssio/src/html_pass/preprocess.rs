@@ -3,12 +3,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{html::{Html, ParserMode}, pass::system::Dependency};
+use crate::{html::{Html, ParserMode}, html_pass::system::Dependency};
 use crate::html::Element;
 use crate::compile::InputRule;
-use crate::pass::system::Scope;
-use crate::pass::system::State;
-use crate::pass::system::Aggregator;
+use crate::html_pass::system::Scope;
+use crate::html_pass::system::State;
+use crate::html_pass::system::Aggregator;
 use crate::dependency_tracking::virtualize_local_paths::virtualize_and_register_local_paths;
 
 impl Html {
@@ -31,8 +31,14 @@ impl Html {
 impl Element {
     pub fn preprocess(self, scope: &Scope) -> State<Html> {
         let Element { tag, mut attrs, children } = self;
-        if tag == "include" || tag == "INCLUDE" {
-            return process_include_tag(attrs, children, scope)
+        match &tag.to_lowercase()[..] {
+            "include" => {
+                return process_include_tag(attrs, children, scope)
+            }
+            "style" => {
+                return process_style_tag(attrs, children, scope)
+            }
+            _ => ()
         }
         preprocess_fragment(children, scope).map_with(|children, ctx| {
             virtualize_and_register_local_paths(&tag, &mut attrs, scope, ctx);
@@ -93,4 +99,24 @@ fn process_include_tag(
     }
     eprintln!("⚠️ FAILED TO RESOLVE INCLUDE IN FILE: {:?}", scope.source_path);
     content
+}
+
+fn process_style_tag(
+    mut attrs: HashMap<String, String>,
+    children: Vec<Html>,
+    scope: &Scope,
+) -> State<Html> {
+    preprocess_fragment(children, scope).map_with(|children, ctx| {
+        virtualize_and_register_local_paths("style", &mut attrs, scope, ctx);
+        let source_code = Html::Fragment(children).to_text().unwrap();
+        let source_code = crate::css_process::pre_process(&source_code, scope, ctx);
+        let children = vec![
+            Html::Text(source_code),
+        ];
+        Html::Element(Element {
+            tag: String::from("style"),
+            attrs: attrs,
+            children,
+        })
+    })
 }
